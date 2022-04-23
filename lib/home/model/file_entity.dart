@@ -1,6 +1,4 @@
-import 'package:built_collection/built_collection.dart';
 import 'package:built_value/built_value.dart';
-import 'package:built_value/json_object.dart';
 import 'package:built_value/serializer.dart';
 part 'file_entity.g.dart';
 
@@ -10,6 +8,16 @@ abstract class FileEntity implements Built<FileEntity, FileEntityBuilder> {
   String get name;
 
   String get uri;
+
+  String get type;
+
+  String get id;
+
+  int get duration;
+
+  int get size;
+
+  bool get isDirectory;
 
   factory FileEntity([void Function(FileEntityBuilder) updates]) = _$FileEntity;
   FileEntity._();

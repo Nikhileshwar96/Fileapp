@@ -1,14 +1,17 @@
 package com.example.file_app
 
 import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.content.ContentUris
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.os.Environment
 import android.provider.MediaStore
 import android.provider.Settings
+import android.util.Size
 import android.widget.Toast
 import androidx.annotation.NonNull
 import androidx.core.app.ActivityCompat
@@ -16,27 +19,111 @@ import androidx.core.content.ContextCompat
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
-import kotlinx.coroutines.CompletableDeferred
+import java.io.ByteArrayOutputStream
 
 class MainActivity: FlutterActivity() {
     
-    private val CHANNEL = "samples.flutter.dev/battery"
+    private val channel = "samples.flutter.dev/battery"
+
+    private val videoProjection = arrayOf(
+        MediaStore.Video.Media._ID,
+        MediaStore.Video.Media.DISPLAY_NAME,
+    MediaStore.Video.Media.DURATION,
+    MediaStore.Video.Media.SIZE,
+        MediaStore.Video.Media.DATE_TAKEN
+    )
+
+    private val downloadProjection = arrayOf(
+        MediaStore.Downloads._ID,
+        MediaStore.Downloads.DISPLAY_NAME,
+        MediaStore.Downloads.DURATION,
+        MediaStore.Downloads.SIZE,
+        MediaStore.Downloads.DATE_TAKEN
+    )
+
+    private val imageProjection = arrayOf(
+        MediaStore.Images.Media._ID,
+        MediaStore.Images.Media.DISPLAY_NAME,
+        "",
+        MediaStore.Images.Media.SIZE,
+        MediaStore.Video.Media.DATE_TAKEN,
+    )
+
+    private val audioProjection: Array<String> = arrayOf(
+        MediaStore.Audio.Media._ID,
+        MediaStore.Audio.Media.DISPLAY_NAME,
+        MediaStore.Audio.Media.DURATION,
+        MediaStore.Audio.Media.SIZE,
+        MediaStore.Video.Media.DATE_TAKEN
+    )
+
+    private val fileProjections = arrayOf(
+        MediaStore.Files.FileColumns._ID,
+        MediaStore.Files.FileColumns.DISPLAY_NAME,
+        MediaStore.Files.FileColumns.DURATION,
+        MediaStore.Files.FileColumns.SIZE,
+        MediaStore.Files.FileColumns.DATE_TAKEN,
+                MediaStore.Files.FileColumns.MIME_TYPE
+    )
 
   override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
-    MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler {
+    MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channel).setMethodCallHandler {
        call, result ->
       if (call.method == "getFiles") {
           val successCB :(MutableList<Map<String, String>>)-> Unit ={
-              fileDatas ->
           }
           val failureCB :(String)-> Unit ={
-                  reason ->
           }
 
-          runSearch(result, successCB, failureCB);
-
+          val type = call.argument<String>("type")
+          if(type != null){
+              runSearch(result, getProjections(type), getExternalContentUri(type), successCB, failureCB)
+          }
+          else{
+              result.error("type unsupported", "type invalid", "File type has to be given")
+          }
       }
+        if (call.method == "getThumbnail") {
+            val uri = call.argument<String>("uri")
+            val id = call.argument<String>("id")?.toLong()
+            if(uri != null && id != null){
+                getThumbnail(result, uri, id)
+            }
+            else{
+                result.error("type unsupported", "type invalid", "File type has to be given")
+            }
+        }
+        if (call.method == "deleteFile") {
+            val uri = call.argument<String>("uri")
+            val id = call.argument<String>("id")?.toLong()
+            if(uri != null && id != null){
+                var deletedFiles = 0;
+                if (SDK_INT >= Build.VERSION_CODES.R) {
+                    deletedFiles = contentResolver.delete(Uri.parse(uri), null)
+                }
+                else{
+                    deletedFiles = contentResolver.delete(Uri.parse(uri), null, null)
+                }
+
+                result.success(deletedFiles==1)
+            }
+            else{
+                result.error("type unsupported", "type invalid", "File type has to be given")
+            }
+        }
+        if(call.method == "getFolderFile"){
+            var folder = call.argument<String>("folder")
+            if(folder != null) {
+                if(folder.isEmpty()){
+                    folder = MediaStore.VOLUME_EXTERNAL;
+                }
+                getFolderFile(result, folder)
+            }
+            else{
+                result.error("Invaild folder", "Folder is empty", "Empty folder")
+            }
+        }
     }
   }
 
@@ -60,9 +147,9 @@ class MainActivity: FlutterActivity() {
         grantResults: IntArray
     ) {
         when (requestCode) {
-            2296 -> if (grantResults.size > 0) {
-                val READ_EXTERNAL_STORAGE = grantResults[0] == PackageManager.PERMISSION_GRANTED
-                if (!READ_EXTERNAL_STORAGE) {
+            2296 -> if (grantResults.isNotEmpty()) {
+                val readLocalStoragePermission = grantResults[0] == PackageManager.PERMISSION_GRANTED
+                if (!readLocalStoragePermission) {
                     Toast.makeText(this, "Allow permission for storage access!", Toast.LENGTH_SHORT)
                         .show()
                 }
@@ -106,58 +193,161 @@ class MainActivity: FlutterActivity() {
         }
     }
 
-    private fun runSearch(result: MethodChannel.Result ,successCallback: (filesDatas: MutableList<Map<String, String>>) -> Unit, failureCallback: (reason: String)->Unit) {
+    private fun runSearch(result: MethodChannel.Result, projection: Array<String>, externalUri:Uri, successCallback: (filesData: MutableList<Map<String, String>>) -> Unit, failureCallback: (reason: String)->Unit) {
         try {
-            val fileDatas: MutableList<Map<String, String>> = mutableListOf();
+            val fileData: MutableList<Map<String, String>> = mutableListOf()
 
-            val permission = checkPermission();
+            val permission = checkPermission()
 
             if (!permission) {
-                requestPermission();
-                failureCallback("Permission denied");
-                result.success(fileDatas)
+                requestPermission()
+                failureCallback("Permission denied")
+                // TODO: Handle this in the permission callback func
+                result.success(fileData)
             }
 
-            val projection = arrayOf(
-                MediaStore.Video.Media.DISPLAY_NAME,
-                MediaStore.Video.Media._ID,
-                MediaStore.Video.Media.DURATION,
-                MediaStore.Video.Media.SIZE
-            )
             val selection = ""
             val selectionArgs = arrayOf<String>()
-            val sortOrder = "${MediaStore.Video.Media.DATE_TAKEN} DESC"
+            val sortOrder = "${projection[4]} DESC"
+            var projectionToQuery = projection.copyOf()
+
+            projectionToQuery = projectionToQuery.filter { it.isNotEmpty() }.toTypedArray()
             applicationContext.contentResolver.query(
-                MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                projection,
+                externalUri,
+                projectionToQuery,
                 selection,
                 selectionArgs,
                 sortOrder
             )?.use { cursor ->
+                val idColumn = cursor.getColumnIndexOrThrow(projection[0])
                 val nameColumn =
-                    cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
-                val pathColumn =
-                    cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
+                    cursor.getColumnIndexOrThrow(projection[1])
                 val durationColumn =
-                    cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)
-                val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)
+                    if(projection[2].isEmpty()) null else cursor.getColumnIndexOrThrow(projection[2])
+                val sizeColumn = cursor.getColumnIndexOrThrow(projection[3])
+
                 while (cursor.moveToNext()) {
                     // Get values of columns for a given video.
+                    val id = cursor.getLong(idColumn)
                     val name = cursor.getString(nameColumn)
-                    val duration = cursor.getInt(durationColumn)
+                    val duration = if(durationColumn == null) null else cursor.getInt(durationColumn)
                     val size = cursor.getInt(sizeColumn)
-                    val path = cursor.getString(pathColumn)
+                    val contentUri: Uri = ContentUris.withAppendedId(
+                        externalUri,
+                        id
+                    )
 
-                    fileDatas.add(mapOf("name" to name, "uri" to path))
+                    fileData.add(mapOf("name" to name, "uri" to contentUri.toString(), "duration" to duration.toString(), "size" to size.toString(), "id" to id.toString()))
                 }
 
-                successCallback(fileDatas);
-                result.success(fileDatas)
+                successCallback(fileData)
+                result.success(fileData)
             }
         }
         catch (exp: Exception){
             failureCallback(exp.localizedMessage)
             result.success(mutableListOf<Map<String, String>>())
+        }
+    }
+
+    private fun getThumbnail(result: MethodChannel.Result, uri: String, id: Long) {
+        try {
+            val fileData: MutableList<Map<String, String>> = mutableListOf()
+
+            val permission = checkPermission()
+
+            if (!permission) {
+                requestPermission()
+                // TODO: Handle this in the permission callback func
+                result.success(fileData)
+            }
+
+            val bitmap = if (SDK_INT >= Build.VERSION_CODES.Q) {
+                applicationContext.contentResolver.loadThumbnail( Uri.parse(uri), Size(50, 50), null)
+            } else {
+                MediaStore.Images.Thumbnails.getThumbnail(applicationContext.contentResolver, id, MediaStore.Images.Thumbnails.MINI_KIND, null)
+            }
+            val stream = ByteArrayOutputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, stream)
+            val image = stream.toByteArray()
+            result.success(image)
+        } catch (ex: Exception) {
+
+        }
+    }
+
+    private fun getProjections(type: String): Array<String> {
+        when(type.lowercase()){
+            "video"->
+                return videoProjection
+            "image"->
+                return imageProjection
+            "audio"->
+                return audioProjection
+            "download" ->
+                return downloadProjection
+            "file" ->
+                return fileProjections
+        }
+
+        return arrayOf()
+    }
+
+    private fun getExternalContentUri(type: String): Uri {
+        when(type.lowercase()){
+            "video"->
+                return MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+            "image"->
+                return MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            "audio"->
+                return MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+            "download" ->
+                return if (SDK_INT >= Build.VERSION_CODES.Q) {
+                    MediaStore.Downloads.EXTERNAL_CONTENT_URI
+                } else {
+                    TODO("VERSION.SDK_INT < Q")
+                    Uri.EMPTY
+                }
+            "file" ->
+                    return MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        }
+
+        return MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
+    }
+
+    private fun getFolderFile(result: MethodChannel.Result, folderName: String) {
+        val fileData: MutableList<Map<String, String>> = mutableListOf()
+        val projection = getProjections("file")
+        val externalUri = getExternalContentUri("file")
+        applicationContext.contentResolver.query(
+            getExternalContentUri("file"),
+            getProjections("file"),
+            "${MediaStore.Files.FileColumns.PARENT} like?",
+            arrayOf(folderName),
+            null,
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(projection[0])
+            val nameColumn =
+                cursor.getColumnIndexOrThrow(projection[1])
+            val durationColumn =
+                if(projection[2].isEmpty()) null else cursor.getColumnIndexOrThrow(projection[2])
+            val sizeColumn = cursor.getColumnIndexOrThrow(projection[3])
+
+            while (cursor.moveToNext()) {
+                // Get values of columns for a given video.
+                val id = cursor.getLong(idColumn)
+                val name = cursor.getString(nameColumn)
+                val duration = if(durationColumn == null) null else cursor.getInt(durationColumn)
+                val size = cursor.getInt(sizeColumn)
+                val contentUri: Uri = ContentUris.withAppendedId(
+                    externalUri,
+                    id
+                )
+
+                fileData.add(mapOf("name" to name, "uri" to contentUri.toString(), "duration" to duration.toString(), "size" to size.toString(), "id" to id.toString()))
+            }
+
+            result.success(fileData)
         }
     }
 }

@@ -1,9 +1,10 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:file_app/home/model/file_entity.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
+
+import '../../providers/platform_service_provider.dart';
 
 class FileDisplay extends StatefulWidget {
   final Future<List<FileEntity>> filesFuture;
@@ -50,7 +51,20 @@ class _FileDisplayState extends State<FileDisplay> {
                         padding: const EdgeInsets.all(8.0),
                         child: Row(
                           children: [
-                            const Icon(Icons.file_copy),
+                            FutureBuilder<Uint8List>(
+                              future: PlatformServices.getThumbnail(
+                                  file.type, file.uri, file.id),
+                              builder: (imageContext, imageSnapshot) {
+                                return imageSnapshot.hasData
+                                    ? SizedBox(
+                                        child:
+                                            Image.memory(imageSnapshot.data!),
+                                        width: 50,
+                                        height: 50,
+                                      )
+                                    : const Icon(Icons.image_not_supported);
+                              },
+                            ),
                             Expanded(
                               child: Text(
                                 file.name,

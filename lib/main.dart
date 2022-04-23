@@ -1,8 +1,6 @@
 import 'package:file_app/home/views/home_page.dart';
 import 'package:flutter/material.dart';
 
-import 'file_manager/views/file_list.dart';
-
 void main() {
   runApp(const FileApp());
 }
