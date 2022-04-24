@@ -1,6 +1,7 @@
 package com.example.file_app
 
 import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.ContentUris
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -12,7 +13,6 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.provider.Settings
 import android.util.Size
-import android.widget.Toast
 import androidx.annotation.NonNull
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -20,26 +20,33 @@ import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.ByteArrayOutputStream
+import java.io.File
+import android.webkit.MimeTypeMap
+
+import android.content.ContentResolver
 
 class MainActivity: FlutterActivity() {
     
     private val channel = "samples.flutter.dev/battery"
+    private var permissionResultStack : MethodChannel.Result? = null
 
     private val videoProjection = arrayOf(
         MediaStore.Video.Media._ID,
         MediaStore.Video.Media.DISPLAY_NAME,
     MediaStore.Video.Media.DURATION,
     MediaStore.Video.Media.SIZE,
-        MediaStore.Video.Media.DATE_TAKEN
+        MediaStore.Video.Media.DATE_TAKEN,
+        MediaStore.Video.Media.MIME_TYPE,
     )
 
     private val downloadProjection = arrayOf(
         MediaStore.Downloads._ID,
         MediaStore.Downloads.DISPLAY_NAME,
-        MediaStore.Downloads.DURATION,
+        if (SDK_INT >= Build.VERSION_CODES.Q) MediaStore.Downloads.DURATION else "",
         MediaStore.Downloads.SIZE,
-        MediaStore.Downloads.DATE_TAKEN
-    )
+        if (SDK_INT >= Build.VERSION_CODES.Q) MediaStore.Downloads.DURATION else "",
+        MediaStore.Downloads.MIME_TYPE,
+        )
 
     private val imageProjection = arrayOf(
         MediaStore.Images.Media._ID,
@@ -47,29 +54,39 @@ class MainActivity: FlutterActivity() {
         "",
         MediaStore.Images.Media.SIZE,
         MediaStore.Video.Media.DATE_TAKEN,
-    )
+        MediaStore.Downloads.MIME_TYPE,
+        )
 
     private val audioProjection: Array<String> = arrayOf(
         MediaStore.Audio.Media._ID,
         MediaStore.Audio.Media.DISPLAY_NAME,
         MediaStore.Audio.Media.DURATION,
         MediaStore.Audio.Media.SIZE,
-        MediaStore.Video.Media.DATE_TAKEN
-    )
+        "",
+        MediaStore.Downloads.MIME_TYPE,
+        )
 
     private val fileProjections = arrayOf(
         MediaStore.Files.FileColumns._ID,
         MediaStore.Files.FileColumns.DISPLAY_NAME,
-        MediaStore.Files.FileColumns.DURATION,
+        if (SDK_INT >= Build.VERSION_CODES.Q) MediaStore.Files.FileColumns.DURATION else "",
         MediaStore.Files.FileColumns.SIZE,
-        MediaStore.Files.FileColumns.DATE_TAKEN,
-                MediaStore.Files.FileColumns.MIME_TYPE
+        if (SDK_INT >= Build.VERSION_CODES.Q) MediaStore.Files.FileColumns.DATE_TAKEN else "",
+        MediaStore.Files.FileColumns.MIME_TYPE
     )
 
   override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
     MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channel).setMethodCallHandler {
        call, result ->
+        if (call.method == "checkStoragePermission") {
+            val isPermissionGranted : Boolean = checkStoragePermission()
+            result.success(isPermissionGranted)
+        }
+        if (call.method == "requestStoragePermission") {
+            permissionResultStack = result
+            requestPermission()
+        }
       if (call.method == "getFiles") {
           val successCB :(MutableList<Map<String, String>>)-> Unit ={
           }
@@ -86,8 +103,9 @@ class MainActivity: FlutterActivity() {
       }
         if (call.method == "getThumbnail") {
             val uri = call.argument<String>("uri")
-            val id = call.argument<String>("id")?.toLong()
-            if(uri != null && id != null){
+            val idString = call.argument<String>("id")
+            val id = if(idString == null || idString.isEmpty()) 0 else idString.toLong()
+            if(uri != null){
                 getThumbnail(result, uri, id)
             }
             else{
@@ -96,28 +114,28 @@ class MainActivity: FlutterActivity() {
         }
         if (call.method == "deleteFile") {
             val uri = call.argument<String>("uri")
-            val id = call.argument<String>("id")?.toLong()
-            if(uri != null && id != null){
-                var deletedFiles = 0;
-                if (SDK_INT >= Build.VERSION_CODES.R) {
-                    deletedFiles = contentResolver.delete(Uri.parse(uri), null)
-                }
-                else{
-                    deletedFiles = contentResolver.delete(Uri.parse(uri), null, null)
-                }
+            val file = File(uri)
+            result.success(file.delete())
+        }
+        if (call.method == "shareFile") {
+            val uri = call.argument<String>("path")
 
-                result.success(deletedFiles==1)
+            val sendIntent: Intent = Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_STREAM, Uri.parse(uri))
+                type = "*/*"
             }
-            else{
-                result.error("type unsupported", "type invalid", "File type has to be given")
-            }
+
+            val shareIntent = Intent.createChooser(sendIntent, null)
+            startActivity(shareIntent)
         }
         if(call.method == "getFolderFile"){
             var folder = call.argument<String>("folder")
             if(folder != null) {
-                if(folder.isEmpty()){
-                    folder = MediaStore.VOLUME_EXTERNAL;
+                if (folder.isEmpty()) {
+                    folder = "/storage/emulated/0"
                 }
+                
                 getFolderFile(result, folder)
             }
             else{
@@ -132,10 +150,9 @@ class MainActivity: FlutterActivity() {
         if (requestCode == 2296) {
             if (SDK_INT >= Build.VERSION_CODES.R) {
                 if (Environment.isExternalStorageManager()) {
-                    // perform action when allow permission success
+                    permissionResultStack?.success(true)
                 } else {
-                    Toast.makeText(this, "Allow permission for storage access!", Toast.LENGTH_SHORT)
-                        .show()
+                    permissionResultStack?.success(false)
                 }
             }
         }
@@ -149,9 +166,12 @@ class MainActivity: FlutterActivity() {
         when (requestCode) {
             2296 -> if (grantResults.isNotEmpty()) {
                 val readLocalStoragePermission = grantResults[0] == PackageManager.PERMISSION_GRANTED
-                if (!readLocalStoragePermission) {
-                    Toast.makeText(this, "Allow permission for storage access!", Toast.LENGTH_SHORT)
-                        .show()
+                val writeLocalStoragePermission = grantResults[1] == PackageManager.PERMISSION_GRANTED
+                if (!readLocalStoragePermission || !writeLocalStoragePermission) {
+                    permissionResultStack?.success(false)
+                }
+                else{
+                    permissionResultStack?.success(true)
                 }
             }
         }
@@ -159,14 +179,17 @@ class MainActivity: FlutterActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
-    private fun checkPermission(): Boolean {
+    private fun checkStoragePermission(): Boolean {
         return if (SDK_INT >= Build.VERSION_CODES.R) {
             Environment.isExternalStorageManager()
         } else {
             val result =
                 ContextCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE)
 
-            result == PackageManager.PERMISSION_GRANTED
+            val result2 =
+                ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE)
+
+            result == PackageManager.PERMISSION_GRANTED && result2 == PackageManager.PERMISSION_GRANTED
         }
     }
 
@@ -187,7 +210,7 @@ class MainActivity: FlutterActivity() {
             //below android 11
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(READ_EXTERNAL_STORAGE),
+                arrayOf(READ_EXTERNAL_STORAGE, WRITE_EXTERNAL_STORAGE),
                 2296
             )
         }
@@ -197,7 +220,7 @@ class MainActivity: FlutterActivity() {
         try {
             val fileData: MutableList<Map<String, String>> = mutableListOf()
 
-            val permission = checkPermission()
+            val permission = checkStoragePermission()
 
             if (!permission) {
                 requestPermission()
@@ -208,7 +231,7 @@ class MainActivity: FlutterActivity() {
 
             val selection = ""
             val selectionArgs = arrayOf<String>()
-            val sortOrder = "${projection[4]} DESC"
+            val sortOrder = if(projection[4].isNotBlank()) "${projection[4]} DESC" else ""
             var projectionToQuery = projection.copyOf()
 
             projectionToQuery = projectionToQuery.filter { it.isNotEmpty() }.toTypedArray()
@@ -225,6 +248,7 @@ class MainActivity: FlutterActivity() {
                 val durationColumn =
                     if(projection[2].isEmpty()) null else cursor.getColumnIndexOrThrow(projection[2])
                 val sizeColumn = cursor.getColumnIndexOrThrow(projection[3])
+                val mimeTypeColumn = cursor.getColumnIndex(projection[5])
 
                 while (cursor.moveToNext()) {
                     // Get values of columns for a given video.
@@ -236,8 +260,9 @@ class MainActivity: FlutterActivity() {
                         externalUri,
                         id
                     )
+                    val mimeType : String = cursor.getString(mimeTypeColumn)
 
-                    fileData.add(mapOf("name" to name, "uri" to contentUri.toString(), "duration" to duration.toString(), "size" to size.toString(), "id" to id.toString()))
+                    fileData.add(mapOf("name" to name, "uri" to contentUri.toString(), "duration" to duration.toString(), "size" to size.toString(), "id" to id.toString(), "type" to mimeType))
                 }
 
                 successCallback(fileData)
@@ -254,7 +279,7 @@ class MainActivity: FlutterActivity() {
         try {
             val fileData: MutableList<Map<String, String>> = mutableListOf()
 
-            val permission = checkPermission()
+            val permission = checkStoragePermission()
 
             if (!permission) {
                 requestPermission()
@@ -284,7 +309,7 @@ class MainActivity: FlutterActivity() {
                 return imageProjection
             "audio"->
                 return audioProjection
-            "download" ->
+            "downloads" ->
                 return downloadProjection
             "file" ->
                 return fileProjections
@@ -301,53 +326,62 @@ class MainActivity: FlutterActivity() {
                 return MediaStore.Images.Media.EXTERNAL_CONTENT_URI
             "audio"->
                 return MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-            "download" ->
+            "downloads" ->
                 return if (SDK_INT >= Build.VERSION_CODES.Q) {
                     MediaStore.Downloads.EXTERNAL_CONTENT_URI
                 } else {
-                    TODO("VERSION.SDK_INT < Q")
-                    Uri.EMPTY
+                    val downloadUri = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).path
+                        Uri.parse(downloadUri)
                 }
             "file" ->
-                    return MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
+                    return MediaStore.Files.getContentUri(Environment.DIRECTORY_DOWNLOADS)
         }
 
-        return MediaStore.Files.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        return MediaStore.Files.getContentUri(Environment.DIRECTORY_DOWNLOADS)
     }
 
     private fun getFolderFile(result: MethodChannel.Result, folderName: String) {
         val fileData: MutableList<Map<String, String>> = mutableListOf()
-        val projection = getProjections("file")
-        val externalUri = getExternalContentUri("file")
-        applicationContext.contentResolver.query(
-            getExternalContentUri("file"),
-            getProjections("file"),
-            "${MediaStore.Files.FileColumns.PARENT} like?",
-            arrayOf(folderName),
-            null,
-        )?.use { cursor ->
-            val idColumn = cursor.getColumnIndexOrThrow(projection[0])
-            val nameColumn =
-                cursor.getColumnIndexOrThrow(projection[1])
-            val durationColumn =
-                if(projection[2].isEmpty()) null else cursor.getColumnIndexOrThrow(projection[2])
-            val sizeColumn = cursor.getColumnIndexOrThrow(projection[3])
+        val file = File(folderName)
+        file.listFiles()?.forEach { childFile ->
+            val fileEntity: MutableMap<String, String> = mutableMapOf()
+            fileEntity["name"] = childFile.name
+            fileEntity["uri"] = childFile.path
+            fileEntity["isDirectory"] = childFile.isDirectory.toString()
+            fileEntity["type"] = if (childFile.isDirectory) "dir" else getMimeType(Uri.parse(childFile.path))
 
-            while (cursor.moveToNext()) {
-                // Get values of columns for a given video.
-                val id = cursor.getLong(idColumn)
-                val name = cursor.getString(nameColumn)
-                val duration = if(durationColumn == null) null else cursor.getInt(durationColumn)
-                val size = cursor.getInt(sizeColumn)
-                val contentUri: Uri = ContentUris.withAppendedId(
-                    externalUri,
-                    id
-                )
-
-                fileData.add(mapOf("name" to name, "uri" to contentUri.toString(), "duration" to duration.toString(), "size" to size.toString(), "id" to id.toString()))
-            }
-
-            result.success(fileData)
+            fileData.add(fileEntity)
         }
+
+        result.success(fileData)
+    }
+
+    fun getMimeType(uri: Uri) : String{
+        var mimeType: String? = null
+        mimeType = if (ContentResolver.SCHEME_CONTENT == uri.getScheme()) {
+            val cr: ContentResolver = this.getContentResolver()
+            cr.getType(uri)
+        } else {
+            val fileExtension = MimeTypeMap.getFileExtensionFromUrl(
+                uri
+                    .toString()
+            )
+            MimeTypeMap.getSingleton().getMimeTypeFromExtension(
+                fileExtension.lowercase()
+            )
+        }
+
+        when{
+            mimeType == null ->
+                return "file"
+            mimeType.startsWith("image/") ->
+                return "image"
+            mimeType.startsWith("video/") ->
+                return "video"
+            mimeType.startsWith("audio/") ->
+                return "audio"
+        }
+
+        return "file"
     }
 }

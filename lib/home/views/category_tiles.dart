@@ -1,10 +1,13 @@
+import 'package:file_app/home/model/default_content.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../file_manager/views/file_list.dart';
 import '../../providers/platform_service_provider.dart';
+import '../bloc/home_bloc.dart';
 
 class CategoryTiles extends StatelessWidget {
-  final String category;
+  final DefaultContent category;
   const CategoryTiles(
     this.category, {
     Key? key,
@@ -13,26 +16,45 @@ class CategoryTiles extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      child: Card(
+      child: Container(
+        color: Colors.white,
+        padding: const EdgeInsets.only(
+          bottom: 20,
+        ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Expanded(
-              child: Icon(
-                Icons.video_file,
-              ),
+            Image.asset(
+              'images/${category.name}.png',
+              height: 40,
+              width: 40,
             ),
-            Text(category)
+            const SizedBox(
+              height: 15,
+            ),
+            Text(category.name)
           ],
         ),
       ),
-      onTap: () async {
-        var fileEntity = PlatformServices.getFiles(category);
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (filePageCOntext) => FileDisplay(filesFuture: fileEntity),
-          ),
-        );
-      },
+      onTap: BlocProvider.of<HomeBloc>(context).state.permissionStatus ==
+              PermissionStatus.permissionGranted
+          ? () async {
+              var fileEntity = PlatformServices().getFiles(category.name);
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (filePageCOntext) => FileDisplay(
+                    fileName: category.name,
+                    filesFuture: fileEntity,
+                  ),
+                ),
+              );
+            }
+          : () => ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                const SnackBar(
+                  content:
+                      Text('Permission is required to explore device sorage'),
+                ),
+              ),
     );
   }
 }
