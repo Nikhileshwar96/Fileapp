@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:file_app/home/model/file_entity.dart';
+import 'package:file_app/home/model/file_type.dart';
 import 'package:flutter/services.dart';
 
 class PlatformServices {
@@ -12,7 +13,7 @@ class PlatformServices {
 
     final List<FileEntity> fileEntityList = <FileEntity>[];
     for (var file in fileObjects) {
-      String mimeType =
+      FileType mimeType =
           mapMimeType(file['type']?.toString().toLowerCase() ?? "");
       var fileEntityBuilder = FileEntityBuilder()
         ..name = file['name'] ?? "Untitled"
@@ -22,6 +23,7 @@ class PlatformServices {
         ..size = int.parse(file['size'])
         ..id = file['id']
         ..isDirectory = file['isDirectory'] == "true"
+        ..path = file['path']
         ..type = mimeType;
 
       fileEntityList.add(fileEntityBuilder.build());
@@ -59,6 +61,8 @@ class PlatformServices {
 
     final List<FileEntity> fileEntityList = <FileEntity>[];
     for (var file in fileObjects) {
+      FileType mimeType =
+          mapMimeType(file['type']?.toString().toLowerCase() ?? "");
       var fileEntityBuilder = FileEntityBuilder()
         ..name = file['name']
         ..uri = file['uri']
@@ -68,7 +72,8 @@ class PlatformServices {
         ..size = int.parse(file['size'] ?? '0')
         ..id = file['id'] ?? ''
         ..isDirectory = file['isDirectory'] == "true"
-        ..type = file['type'] ?? 'dir';
+        ..path = file['path']
+        ..type = mimeType;
 
       fileEntityList.add(fileEntityBuilder.build());
     }
@@ -88,19 +93,23 @@ class PlatformServices {
     return await platform.invokeMethod('requestStoragePermission');
   }
 
-  String mapMimeType(String mimeType) {
+  FileType mapMimeType(String mimeType) {
     if (mimeType.startsWith('video')) {
-      return 'video';
+      return FileType.video;
     }
 
     if (mimeType.startsWith('audio')) {
-      return 'audio';
+      return FileType.audio;
     }
 
     if (mimeType.startsWith('image')) {
-      return 'image';
+      return FileType.image;
     }
 
-    return 'file';
+    if (mimeType == 'dir') {
+      return FileType.directory;
+    }
+
+    return FileType.file;
   }
 }

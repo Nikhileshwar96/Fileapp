@@ -22,8 +22,11 @@ class _$FileEntitySerializer implements StructuredSerializer<FileEntity> {
       serializers.serialize(object.name, specifiedType: const FullType(String)),
       'uri',
       serializers.serialize(object.uri, specifiedType: const FullType(String)),
+      'path',
+      serializers.serialize(object.path, specifiedType: const FullType(String)),
       'type',
-      serializers.serialize(object.type, specifiedType: const FullType(String)),
+      serializers.serialize(object.type,
+          specifiedType: const FullType(FileType)),
       'id',
       serializers.serialize(object.id, specifiedType: const FullType(String)),
       'duration',
@@ -58,9 +61,13 @@ class _$FileEntitySerializer implements StructuredSerializer<FileEntity> {
           result.uri = serializers.deserialize(value,
               specifiedType: const FullType(String))! as String;
           break;
+        case 'path':
+          result.path = serializers.deserialize(value,
+              specifiedType: const FullType(String))! as String;
+          break;
         case 'type':
           result.type = serializers.deserialize(value,
-              specifiedType: const FullType(String))! as String;
+              specifiedType: const FullType(FileType))! as FileType;
           break;
         case 'id':
           result.id = serializers.deserialize(value,
@@ -91,7 +98,9 @@ class _$FileEntity extends FileEntity {
   @override
   final String uri;
   @override
-  final String type;
+  final String path;
+  @override
+  final FileType type;
   @override
   final String id;
   @override
@@ -107,6 +116,7 @@ class _$FileEntity extends FileEntity {
   _$FileEntity._(
       {required this.name,
       required this.uri,
+      required this.path,
       required this.type,
       required this.id,
       required this.duration,
@@ -115,6 +125,7 @@ class _$FileEntity extends FileEntity {
       : super._() {
     BuiltValueNullFieldError.checkNotNull(name, 'FileEntity', 'name');
     BuiltValueNullFieldError.checkNotNull(uri, 'FileEntity', 'uri');
+    BuiltValueNullFieldError.checkNotNull(path, 'FileEntity', 'path');
     BuiltValueNullFieldError.checkNotNull(type, 'FileEntity', 'type');
     BuiltValueNullFieldError.checkNotNull(id, 'FileEntity', 'id');
     BuiltValueNullFieldError.checkNotNull(duration, 'FileEntity', 'duration');
@@ -136,6 +147,7 @@ class _$FileEntity extends FileEntity {
     return other is FileEntity &&
         name == other.name &&
         uri == other.uri &&
+        path == other.path &&
         type == other.type &&
         id == other.id &&
         duration == other.duration &&
@@ -149,7 +161,9 @@ class _$FileEntity extends FileEntity {
         $jc(
             $jc(
                 $jc(
-                    $jc($jc($jc(0, name.hashCode), uri.hashCode),
+                    $jc(
+                        $jc($jc($jc(0, name.hashCode), uri.hashCode),
+                            path.hashCode),
                         type.hashCode),
                     id.hashCode),
                 duration.hashCode),
@@ -162,6 +176,7 @@ class _$FileEntity extends FileEntity {
     return (newBuiltValueToStringHelper('FileEntity')
           ..add('name', name)
           ..add('uri', uri)
+          ..add('path', path)
           ..add('type', type)
           ..add('id', id)
           ..add('duration', duration)
@@ -182,9 +197,13 @@ class FileEntityBuilder implements Builder<FileEntity, FileEntityBuilder> {
   String? get uri => _$this._uri;
   set uri(String? uri) => _$this._uri = uri;
 
-  String? _type;
-  String? get type => _$this._type;
-  set type(String? type) => _$this._type = type;
+  String? _path;
+  String? get path => _$this._path;
+  set path(String? path) => _$this._path = path;
+
+  FileType? _type;
+  FileType? get type => _$this._type;
+  set type(FileType? type) => _$this._type = type;
 
   String? _id;
   String? get id => _$this._id;
@@ -209,6 +228,7 @@ class FileEntityBuilder implements Builder<FileEntity, FileEntityBuilder> {
     if ($v != null) {
       _name = $v.name;
       _uri = $v.uri;
+      _path = $v.path;
       _type = $v.type;
       _id = $v.id;
       _duration = $v.duration;
@@ -238,6 +258,8 @@ class FileEntityBuilder implements Builder<FileEntity, FileEntityBuilder> {
                 name, 'FileEntity', 'name'),
             uri:
                 BuiltValueNullFieldError.checkNotNull(uri, 'FileEntity', 'uri'),
+            path: BuiltValueNullFieldError.checkNotNull(
+                path, 'FileEntity', 'path'),
             type: BuiltValueNullFieldError.checkNotNull(
                 type, 'FileEntity', 'type'),
             id: BuiltValueNullFieldError.checkNotNull(id, 'FileEntity', 'id'),

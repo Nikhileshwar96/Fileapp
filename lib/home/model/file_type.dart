@@ -11,6 +11,7 @@ class FileType extends EnumClass {
   static const FileType video = _$video;
   static const FileType audio = _$audio;
   static const FileType file = _$file;
+  static const FileType directory = _$directory;
 
   const FileType._(String name) : super(name);
 

@@ -11,7 +11,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   PlatformServices platformServices;
   HomeBloc(initialState, this.platformServices) : super(initialState) {
     on<CheckPermission>(checkPermission);
-    on<RequestPermission>(requestPermission);
   }
 
   checkPermission(CheckPermission event, Emitter<HomeState> emit) async {
@@ -22,17 +21,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           permissionStatus: PermissionStatus.permissionGranted,
         ),
       );
+
+      return;
     }
 
-    emit(
-      HomeState(
-        contentTypes: state.contentTypes,
-        permissionStatus: PermissionStatus.permissionDenied,
-      ),
-    );
-  }
-
-  requestPermission(RequestPermission event, Emitter<HomeState> emit) async {
     var permissionResult = await platformServices.requestStoragePermission();
     emit(
       HomeState(
@@ -43,4 +35,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       ),
     );
   }
+
+  requestPermission(RequestPermission event, Emitter<HomeState> emit) async {}
 }

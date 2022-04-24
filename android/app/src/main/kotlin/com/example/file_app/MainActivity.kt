@@ -24,6 +24,8 @@ import java.io.File
 import android.webkit.MimeTypeMap
 
 import android.content.ContentResolver
+import androidx.core.content.FileProvider
+import java.util.*
 
 class MainActivity: FlutterActivity() {
     
@@ -37,6 +39,7 @@ class MainActivity: FlutterActivity() {
     MediaStore.Video.Media.SIZE,
         MediaStore.Video.Media.DATE_TAKEN,
         MediaStore.Video.Media.MIME_TYPE,
+        MediaStore.Video.Media.RELATIVE_PATH,
     )
 
     private val downloadProjection = arrayOf(
@@ -46,6 +49,7 @@ class MainActivity: FlutterActivity() {
         MediaStore.Downloads.SIZE,
         if (SDK_INT >= Build.VERSION_CODES.Q) MediaStore.Downloads.DURATION else "",
         MediaStore.Downloads.MIME_TYPE,
+        MediaStore.Downloads.RELATIVE_PATH,
         )
 
     private val imageProjection = arrayOf(
@@ -53,8 +57,9 @@ class MainActivity: FlutterActivity() {
         MediaStore.Images.Media.DISPLAY_NAME,
         "",
         MediaStore.Images.Media.SIZE,
-        MediaStore.Video.Media.DATE_TAKEN,
-        MediaStore.Downloads.MIME_TYPE,
+        MediaStore.Images.Media.DATE_TAKEN,
+        MediaStore.Images.Media.MIME_TYPE,
+        MediaStore.Images.Media.RELATIVE_PATH,
         )
 
     private val audioProjection: Array<String> = arrayOf(
@@ -63,8 +68,9 @@ class MainActivity: FlutterActivity() {
         MediaStore.Audio.Media.DURATION,
         MediaStore.Audio.Media.SIZE,
         "",
-        MediaStore.Downloads.MIME_TYPE,
-        )
+        MediaStore.Audio.Media.MIME_TYPE,
+        MediaStore.Audio.Media.RELATIVE_PATH
+    )
 
     private val fileProjections = arrayOf(
         MediaStore.Files.FileColumns._ID,
@@ -72,7 +78,8 @@ class MainActivity: FlutterActivity() {
         if (SDK_INT >= Build.VERSION_CODES.Q) MediaStore.Files.FileColumns.DURATION else "",
         MediaStore.Files.FileColumns.SIZE,
         if (SDK_INT >= Build.VERSION_CODES.Q) MediaStore.Files.FileColumns.DATE_TAKEN else "",
-        MediaStore.Files.FileColumns.MIME_TYPE
+        MediaStore.Files.FileColumns.MIME_TYPE,
+                MediaStore.Files.FileColumns.RELATIVE_PATH
     )
 
   override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
@@ -249,9 +256,9 @@ class MainActivity: FlutterActivity() {
                     if(projection[2].isEmpty()) null else cursor.getColumnIndexOrThrow(projection[2])
                 val sizeColumn = cursor.getColumnIndexOrThrow(projection[3])
                 val mimeTypeColumn = cursor.getColumnIndex(projection[5])
+                val pathColumn = cursor.getColumnIndex(projection[6])
 
                 while (cursor.moveToNext()) {
-                    // Get values of columns for a given video.
                     val id = cursor.getLong(idColumn)
                     val name = cursor.getString(nameColumn)
                     val duration = if(durationColumn == null) null else cursor.getInt(durationColumn)
@@ -260,9 +267,10 @@ class MainActivity: FlutterActivity() {
                         externalUri,
                         id
                     )
-                    val mimeType : String = cursor.getString(mimeTypeColumn)
+                    val mimeType : String = mapMimeType(cursor.getString(mimeTypeColumn))
+                    val path : String = cursor.getString(pathColumn)
 
-                    fileData.add(mapOf("name" to name, "uri" to contentUri.toString(), "duration" to duration.toString(), "size" to size.toString(), "id" to id.toString(), "type" to mimeType))
+                    fileData.add(mapOf("name" to name, "uri" to contentUri.toString(), "path" to path, "duration" to duration.toString(), "size" to size.toString(), "id" to id.toString(), "type" to mimeType))
                 }
 
                 successCallback(fileData)
@@ -297,7 +305,7 @@ class MainActivity: FlutterActivity() {
             val image = stream.toByteArray()
             result.success(image)
         } catch (ex: Exception) {
-
+            print(ex)
         }
     }
 
@@ -309,7 +317,7 @@ class MainActivity: FlutterActivity() {
                 return imageProjection
             "audio"->
                 return audioProjection
-            "downloads" ->
+            "download" ->
                 return downloadProjection
             "file" ->
                 return fileProjections
@@ -326,7 +334,7 @@ class MainActivity: FlutterActivity() {
                 return MediaStore.Images.Media.EXTERNAL_CONTENT_URI
             "audio"->
                 return MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-            "downloads" ->
+            "download" ->
                 return if (SDK_INT >= Build.VERSION_CODES.Q) {
                     MediaStore.Downloads.EXTERNAL_CONTENT_URI
                 } else {
@@ -346,7 +354,11 @@ class MainActivity: FlutterActivity() {
         file.listFiles()?.forEach { childFile ->
             val fileEntity: MutableMap<String, String> = mutableMapOf()
             fileEntity["name"] = childFile.name
-            fileEntity["uri"] = childFile.path
+            fileEntity["uri"] = if (childFile.isDirectory) "dir" else
+                FileProvider.getUriForFile(
+                    Objects.requireNonNull(context),
+                    BuildConfig.APPLICATION_ID + ".provider", childFile).toString()
+            fileEntity["path"] = childFile.path
             fileEntity["isDirectory"] = childFile.isDirectory.toString()
             fileEntity["type"] = if (childFile.isDirectory) "dir" else getMimeType(Uri.parse(childFile.path))
 
@@ -371,6 +383,10 @@ class MainActivity: FlutterActivity() {
             )
         }
 
+        return mapMimeType(mimeType)
+    }
+
+    fun mapMimeType (mimeType: String?) : String{
         when{
             mimeType == null ->
                 return "file"

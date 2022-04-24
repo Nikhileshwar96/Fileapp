@@ -1,11 +1,12 @@
 import 'dart:io';
 
 import 'package:file_app/home/model/file_entity.dart';
+import 'package:file_app/home/model/file_type.dart';
 import 'package:file_app/providers/platform_Service_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
-import 'delete_confirmation_view.dart';
+import '../../file_listing/views/delete_confirmation_view.dart';
 
 class FileDisplayPage extends StatefulWidget {
   final FileEntity file;
@@ -53,13 +54,13 @@ class _FileDisplayPageState extends State<FileDisplayPage> {
         ],
       ),
       body: SafeArea(
-        child: widget.file.type.toLowerCase() == "image"
+        child: widget.file.type == FileType.image
             ? Image.file(
                 File(
                   widget.file.uri,
                 ),
               )
-            : widget.file.type.toLowerCase() == "video"
+            : widget.file.type == FileType.video
                 ? VideoPlayer(
                     VideoPlayerController.file(
                       File(

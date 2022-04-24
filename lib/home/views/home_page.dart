@@ -4,7 +4,7 @@ import 'package:file_app/home/views/category_tiles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../file_manager/views/file_list.dart';
+import '../../file_listing/views/file_list.dart';
 import '../../providers/platform_service_provider.dart';
 
 class HomePage extends StatelessWidget {
@@ -28,50 +28,50 @@ class HomePage extends StatelessWidget {
               ),
               SizedBox(
                 child: Container(
-                  child: InkWell(
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          children: [
-                            Image.asset(
-                              'images/folder.png',
-                              width: 50,
-                              height: 50,
-                            ),
-                            const SizedBox(
-                              width: 10,
-                            ),
-                            Text(
-                              externalDirectoryName,
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                          ],
+                  child: BlocBuilder<HomeBloc, HomeState>(
+                    builder: (context, state) => InkWell(
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            children: [
+                              Image.asset(
+                                'images/folder.png',
+                                width: 50,
+                                height: 50,
+                              ),
+                              const SizedBox(
+                                width: 10,
+                              ),
+                              Text(
+                                externalDirectoryName,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    onTap: BlocProvider.of<HomeBloc>(context)
-                                .state
-                                .permissionStatus ==
-                            PermissionStatus.permissionGranted
-                        ? () {
-                            var files = PlatformServices().getFolderFiles("");
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (filePageCOntext) => FileDisplay(
-                                  fileName: externalDirectoryName,
-                                  filesFuture: files,
+                      onTap: state.permissionStatus ==
+                              PermissionStatus.permissionGranted
+                          ? () {
+                              var files = PlatformServices().getFolderFiles("");
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (filePageCOntext) => FileDisplay(
+                                    fileName: externalDirectoryName,
+                                    filesFuture: files,
+                                  ),
+                                ),
+                              );
+                            }
+                          : () =>
+                              ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Permission is required to explore device sorage'),
                                 ),
                               ),
-                            );
-                          }
-                        : () =>
-                            ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                    'Permission is required to explore device sorage'),
-                              ),
-                            ),
+                    ),
                   ),
                   constraints: const BoxConstraints.expand(height: 60),
                 ),

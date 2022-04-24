@@ -2,7 +2,7 @@ import 'package:file_app/home/model/default_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../file_manager/views/file_list.dart';
+import '../../file_listing/views/file_list.dart';
 import '../../providers/platform_service_provider.dart';
 import '../bloc/home_bloc.dart';
 

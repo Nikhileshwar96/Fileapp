@@ -1,5 +1,6 @@
 import 'package:built_value/built_value.dart';
 import 'package:built_value/serializer.dart';
+import 'package:file_app/home/model/file_type.dart';
 part 'file_entity.g.dart';
 
 abstract class FileEntity implements Built<FileEntity, FileEntityBuilder> {
@@ -9,7 +10,9 @@ abstract class FileEntity implements Built<FileEntity, FileEntityBuilder> {
 
   String get uri;
 
-  String get type;
+  String get path;
+
+  FileType get type;
 
   String get id;
 
