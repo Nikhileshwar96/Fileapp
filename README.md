@@ -2,13 +2,14 @@
 
 An app to view files and folders and perform manipulations like delete and send.
 
-![Home](screenshots/home.jfif) {height: 200px}
-![Folder](screenshots/folders.jfif) {height: 200px}
-![Images](screenshots/images.jfif) {height: 200px}
-![Files](screenshots/files.jfif) {height: 200px}
-![Delete](screenshots/delete.jfif) {height: 200px}
-![Share](screenshots/share.png) {height: 200px}
-![Video](screenshots/delete.jfif) {height: 200px}
+<img src="screenshots/home.jfif" alt="Home" width="200"/>
+<img src="screenshots/folders.jfif" alt="Folder" width="200"/>
+<img src="screenshots/images.jfif" alt="Image" width="200"/>
+<img src="screenshots/videoPreview.png" alt="File rendering" width="200"/>
+<img src="screenshots/share.png" alt="Share" width="200"/>
+<img src="screenshots/files.jfif" alt="File" width="200"/>
+<img src="screenshots/delete.jfif" alt="Delete" width="200"/>
+
 
 This app contains only android implementation as I currently don't have access to a mac machine to test out swift code.
 
