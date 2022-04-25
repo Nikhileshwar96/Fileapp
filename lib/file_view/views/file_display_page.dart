@@ -1,8 +1,9 @@
 import 'dart:io';
 
+import 'package:file_app/file_listing/bloc/file_listing_bloc.dart';
 import 'package:file_app/home/model/file_entity.dart';
 import 'package:file_app/home/model/file_type.dart';
-import 'package:file_app/providers/platform_Service_provider.dart';
+import 'package:file_app/providers/platform_service_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:video_player/video_player.dart';
@@ -43,14 +44,23 @@ class _FileDisplayPageState extends State<FileDisplayPage> {
         actions: [
           Builder(
             builder: (_tempContext) => IconButton(
-              onPressed: () {
-                showModalBottomSheet<bool>(
-                  context: _tempContext,
-                  clipBehavior: Clip.hardEdge,
-                  builder: (deleteContext) => DeleteConfirmationView(
-                    widget.file,
-                  ),
-                );
+              onPressed: () async {
+                bool isDeleteConfirmed = await showModalBottomSheet<bool>(
+                      context: _tempContext,
+                      clipBehavior: Clip.hardEdge,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0),
+                      ),
+                      builder: (deleteContext) => DeleteConfirmationView(
+                        widget.file,
+                      ),
+                    ) ??
+                    false;
+                if (isDeleteConfirmed) {
+                  Navigator.pop(context);
+                  BlocProvider.of<FileListingBloc>(context)
+                      .add(DeleteFile(widget.file.path));
+                }
               },
               icon: const Icon(
                 Icons.delete,
@@ -79,7 +89,14 @@ class _FileDisplayPageState extends State<FileDisplayPage> {
                 ),
               )
             : widget.file.type == FileType.video
-                ? VideoPlayer(videoController!)
+                ? Center(
+                    child: AspectRatio(
+                      aspectRatio: videoController?.value.aspectRatio ?? 1,
+                      child: VideoPlayer(
+                        videoController!,
+                      ),
+                    ),
+                  )
                 : const Center(
                     child: Text(
                       'File cannot be previewed',

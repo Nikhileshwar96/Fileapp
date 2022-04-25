@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../providers/platform_service_provider.dart';
 import '../../file_view/views/file_display_page.dart';
+import '../bloc/file_listing_bloc.dart';
 
 class FileListView extends StatelessWidget {
   final FileEntity file;
@@ -52,7 +53,10 @@ class FileListView extends StatelessWidget {
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (imageContext) => FileDisplayPage(file),
+            builder: (imageContext) => BlocProvider<FileListingBloc>.value(
+              value: BlocProvider.of<FileListingBloc>(context),
+              child: FileDisplayPage(file),
+            ),
           ),
         );
       },

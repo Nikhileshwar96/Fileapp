@@ -1,7 +1,5 @@
 import 'package:file_app/home/model/file_entity.dart';
-import 'package:file_app/providers/platform_service_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DeleteConfirmationView extends StatelessWidget {
   final FileEntity file;
@@ -10,12 +8,20 @@ class DeleteConfirmationView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(20),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
+          const SizedBox(
+            height: 12,
+          ),
           Text(
             'Are you sure you want to delete ${file.name}',
-            style: Theme.of(context).textTheme.displayMedium,
+            style: Theme.of(context).textTheme.headline6,
+          ),
+          const SizedBox(
+            height: 32,
           ),
           Row(
             mainAxisSize: MainAxisSize.min,
@@ -23,16 +29,15 @@ class DeleteConfirmationView extends StatelessWidget {
             children: [
               TextButton(
                 onPressed: () {
-                  RepositoryProvider.of<PlatformServices>(context)
-                      .deleteFile(file.uri);
-                  ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-                    const SnackBar(
-                      content: Text('Deleted successfully'),
-                    ),
-                  );
                   Navigator.pop<bool>(context, true);
                 },
-                child: const Text('Yes'),
+                style: TextButton.styleFrom(
+                  primary: Colors.white,
+                  backgroundColor: Colors.red,
+                ),
+                child: const Text(
+                  'Yes delete!',
+                ),
               ),
               TextButton(
                 onPressed: () {

@@ -62,12 +62,13 @@ class HomePage extends StatelessWidget {
                                     create: (blocCreatorContext) =>
                                         FileListingBloc(
                                       const FileListingState(
-                                        groupName: externalDirectoryName,
-                                        files: [],
-                                        status: FileListingStatus.loading,
-                                      ),
+                                          groupName: externalDirectoryName,
+                                          files: [],
+                                          status: FileListingStatus.loading,
+                                          folderType: FolderType.directory),
                                       RepositoryProvider.of<PlatformServices>(
                                           context),
+                                      externalDirectoryName,
                                     )..add(
                                             LoadFilesInFolder(
                                               externalDirectoryName,

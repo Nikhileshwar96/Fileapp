@@ -22,3 +22,13 @@ class LoadCategoryFiles extends FileListingEvent {
   @override
   List<Object?> get props => [content];
 }
+
+class DeleteFile extends FileListingEvent {
+  final String filePath;
+
+  DeleteFile(this.filePath);
+
+  @override
+  // TODO: implement props
+  List<Object?> get props => [filePath];
+}

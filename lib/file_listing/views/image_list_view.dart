@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../home/model/file_entity.dart';
 import '../../providers/platform_service_provider.dart';
 import '../../file_view/views/file_display_page.dart';
+import '../bloc/file_listing_bloc.dart';
 
 class ImageListView extends StatelessWidget {
   final FileEntity file;
@@ -24,7 +25,7 @@ class ImageListView extends StatelessWidget {
                 future: RepositoryProvider.of<PlatformServices>(context)
                     .getThumbnail(file.type.name, file.uri, file.id),
                 builder: (imageContext, imageSnapshot) {
-                  return imageSnapshot.hasData
+                  return imageSnapshot.hasData && imageSnapshot.data!.isNotEmpty
                       ? SizedBox(
                           child: Image.memory(imageSnapshot.data!),
                           width: 50,
@@ -53,7 +54,10 @@ class ImageListView extends StatelessWidget {
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (imageContext) => FileDisplayPage(file),
+            builder: (imageContext) => BlocProvider<FileListingBloc>.value(
+              value: BlocProvider.of<FileListingBloc>(context),
+              child: FileDisplayPage(file),
+            ),
           ),
         );
       },

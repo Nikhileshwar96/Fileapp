@@ -29,8 +29,17 @@ class _FileDisplayState extends State<FileDisplay> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: BlocBuilder<FileListingBloc, FileListingState>(
+        title: BlocConsumer<FileListingBloc, FileListingState>(
           builder: (cont, fileListingState) => Text(fileListingState.groupName),
+          listener: (listenerContext, state) => (state.message != null)
+              ? ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      state.message!,
+                    ),
+                  ),
+                )
+              : () {},
         ),
       ),
       body: BlocBuilder<FileListingBloc, FileListingState>(
