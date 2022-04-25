@@ -29,6 +29,5 @@ class DeleteFile extends FileListingEvent {
   DeleteFile(this.filePath);
 
   @override
-  // TODO: implement props
   List<Object?> get props => [filePath];
 }

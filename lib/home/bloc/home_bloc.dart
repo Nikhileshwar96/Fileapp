@@ -2,6 +2,8 @@ import 'package:file_app/providers/platform_service_provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
+import '../../model/default_content.dart';
+
 part 'home_event.dart';
 part 'home_state.dart';
 

@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:file_app/file_listing/bloc/file_listing_bloc.dart';
 import 'package:file_app/model/file_entity.dart';
+import 'package:file_app/model/file_type.dart';
 import 'package:file_app/providers/platform_service_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
