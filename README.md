@@ -1,16 +1,33 @@
 # file_app
 
-A new Flutter project.
+An app to view files and folders and perform manipulations like delete and send.
 
-## Getting Started
+![Home](screenshots/home.jfif)
+![Folder](screenshots/folders.jfif)
+![Images](screenshots/images.jfif)
+![Files](screenshots/files.jfif)
+![Delete](screenshots/delete.jfif)
+![Share](screenshots/share.png)
+![Video](screenshots/delete.jfif)
 
-This project is a starting point for a Flutter application.
+This app contains only android implementation as I currently don't have access to a mac machine to test out swift code.
 
-A few resources to get you started if this is your first Flutter project:
+## Major dependencies used
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+### bloc
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+For state management and dependency injection of services
+
+### build_value, build_runner and built_collection
+
+For maintaining models
+
+### equatable
+
+For bloc state and event comparisions
+
+### video_player
+
+For previewing of videos
+
+## Project structure
