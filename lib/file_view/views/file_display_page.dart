@@ -18,8 +18,23 @@ class FileDisplayPage extends StatefulWidget {
 }
 
 class _FileDisplayPageState extends State<FileDisplayPage> {
+  VideoPlayerController? videoController;
+  @override
+  void initState() {
+    videoController = widget.file.type == FileType.video
+        ? VideoPlayerController.file(
+            File(
+              widget.file.path,
+            ),
+          )
+        : null;
+    videoController?.initialize().then((value) => setState(() {}));
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
+    videoController?.play();
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -64,13 +79,7 @@ class _FileDisplayPageState extends State<FileDisplayPage> {
                 ),
               )
             : widget.file.type == FileType.video
-                ? VideoPlayer(
-                    VideoPlayerController.file(
-                      File(
-                        widget.file.uri,
-                      ),
-                    ),
-                  )
+                ? VideoPlayer(videoController!)
                 : const Center(
                     child: Text(
                       'File cannot be previewed',
@@ -78,5 +87,11 @@ class _FileDisplayPageState extends State<FileDisplayPage> {
                   ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    videoController?.dispose();
+    super.dispose();
   }
 }

@@ -23,7 +23,7 @@ class VideoListView extends StatelessWidget {
                 future: RepositoryProvider.of<PlatformServices>(context)
                     .getThumbnail(file.type.name, file.uri, file.id),
                 builder: (imageContext, imageSnapshot) {
-                  return imageSnapshot.hasData
+                  return imageSnapshot.hasData && imageSnapshot.data!.isNotEmpty
                       ? SizedBox(
                           child: Image.memory(imageSnapshot.data!),
                           width: 50,

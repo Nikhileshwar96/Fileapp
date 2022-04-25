@@ -300,8 +300,9 @@ class MainActivity: FlutterActivity() {
             } else {
                 MediaStore.Images.Thumbnails.getThumbnail(applicationContext.contentResolver, id, MediaStore.Images.Thumbnails.MINI_KIND, null)
             }
+
             val stream = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, stream)
+            bitmap?.compress(Bitmap.CompressFormat.PNG, 90, stream)
             val image = stream.toByteArray()
             result.success(image)
         } catch (ex: Exception) {
