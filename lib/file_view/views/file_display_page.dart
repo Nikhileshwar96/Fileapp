@@ -69,7 +69,7 @@ class _FileDisplayPageState extends State<FileDisplayPage> {
           ),
           IconButton(
             onPressed: () {
-              RepositoryProvider.of<PlatformServices>(context).shareFile(
+              RepositoryProvider.of<IPlatformServices>(context).shareFile(
                 widget.file.uri,
               );
             },

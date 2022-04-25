@@ -30,7 +30,12 @@ class _FileDisplayState extends State<FileDisplay> {
     return Scaffold(
       appBar: AppBar(
         title: BlocConsumer<FileListingBloc, FileListingState>(
-          builder: (cont, fileListingState) => Text(fileListingState.groupName),
+          builder: (cont, fileListingState) => Text(
+            fileListingState.groupName,
+            key: Key(
+              'listing_title_${fileListingState.groupName}',
+            ),
+          ),
           listener: (listenerContext, state) => (state.message != null)
               ? ScaffoldMessenger.maybeOf(context)?.showSnackBar(
                   SnackBar(
@@ -48,7 +53,8 @@ class _FileDisplayState extends State<FileDisplay> {
             case FileListingStatus.loading:
               return const Center(
                 child: Text(
-                  'No files to display',
+                  'Loading',
+                  key: Key('loading_placeholder'),
                 ),
               );
             case FileListingStatus.loaded:
@@ -64,6 +70,7 @@ class _FileDisplayState extends State<FileDisplay> {
                   : const Center(
                       child: Text(
                         'No files to display',
+                        key: Key('empty_placeholder'),
                       ),
                     );
             case FileListingStatus.error:

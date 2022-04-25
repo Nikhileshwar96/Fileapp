@@ -8,7 +8,7 @@ part 'home_event.dart';
 part 'home_state.dart';
 
 class HomeBloc extends Bloc<HomeEvent, HomeState> {
-  PlatformServices platformServices;
+  IPlatformServices platformServices;
   HomeBloc(initialState, this.platformServices) : super(initialState) {
     on<CheckPermission>(checkPermission);
   }
@@ -35,6 +35,4 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       ),
     );
   }
-
-  requestPermission(RequestPermission event, Emitter<HomeState> emit) async {}
 }

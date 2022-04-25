@@ -50,7 +50,7 @@ class CategoryTiles extends StatelessWidget {
                         status: FileListingStatus.loading,
                         folderType: FolderType.categories,
                       ),
-                      RepositoryProvider.of<PlatformServices>(context),
+                      RepositoryProvider.of<IPlatformServices>(context),
                       category.name,
                     )..add(LoadCategoryFiles(category)),
                     child: const FileDisplay(),

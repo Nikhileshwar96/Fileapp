@@ -66,7 +66,7 @@ class HomePage extends StatelessWidget {
                                           files: [],
                                           status: FileListingStatus.loading,
                                           folderType: FolderType.directory),
-                                      RepositoryProvider.of<PlatformServices>(
+                                      RepositoryProvider.of<IPlatformServices>(
                                           context),
                                       externalDirectoryName,
                                     )..add(

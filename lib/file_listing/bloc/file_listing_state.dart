@@ -18,7 +18,7 @@ class FileListingState extends Equatable {
   });
 
   @override
-  List<Object?> get props => [groupName, files, message];
+  List<Object?> get props => [groupName, files, message, status];
 }
 
 enum FolderType { categories, directory }

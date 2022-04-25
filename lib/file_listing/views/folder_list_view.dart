@@ -47,7 +47,7 @@ class FolderListView extends StatelessWidget {
                   status: FileListingStatus.loading,
                   folderType: FolderType.directory,
                 ),
-                RepositoryProvider.of<PlatformServices>(context),
+                RepositoryProvider.of<IPlatformServices>(context),
                 file.path,
               )..add(LoadFilesInFolder(file.path)),
               child: const FileDisplay(),

@@ -22,7 +22,7 @@ class ImageListView extends StatelessWidget {
           child: Row(
             children: [
               FutureBuilder<Uint8List>(
-                future: RepositoryProvider.of<PlatformServices>(context)
+                future: RepositoryProvider.of<IPlatformServices>(context)
                     .getThumbnail(file.type.name, file.uri, file.id),
                 builder: (imageContext, imageSnapshot) {
                   return imageSnapshot.hasData && imageSnapshot.data!.isNotEmpty

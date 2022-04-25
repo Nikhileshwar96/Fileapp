@@ -3,7 +3,7 @@ description: A new Flutter project.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
@@ -22,14 +22,17 @@ dependencies:
   video_player: ^2.4.0
 
 dev_dependencies:
+  bloc_test: ^9.0.3
   build_runner: ^2.1.10
   built_value_generator: ^8.2.0
   flutter_lints: ^1.0.0
   flutter_test:
     sdk: flutter
+  integration_test:
+    sdk: flutter
+  mockito: ^5.1.0
 
 flutter:
-
   uses-material-design: true
   assets:
     - images/

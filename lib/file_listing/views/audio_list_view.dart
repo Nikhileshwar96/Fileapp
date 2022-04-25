@@ -22,10 +22,10 @@ class AudioListView extends StatelessWidget {
           child: Row(
             children: [
               FutureBuilder<Uint8List>(
-                future: RepositoryProvider.of<PlatformServices>(context)
+                future: RepositoryProvider.of<IPlatformServices>(context)
                     .getThumbnail(file.type.name, file.uri, file.id),
                 builder: (imageContext, imageSnapshot) {
-                  return imageSnapshot.hasData
+                  return imageSnapshot.hasData && imageSnapshot.data!.isNotEmpty
                       ? SizedBox(
                           child: Image.memory(imageSnapshot.data!),
                           width: 50,

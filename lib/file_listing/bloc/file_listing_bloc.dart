@@ -8,7 +8,7 @@ part 'file_listing_event.dart';
 part 'file_listing_state.dart';
 
 class FileListingBloc extends Bloc<FileListingEvent, FileListingState> {
-  PlatformServices platformServices;
+  IPlatformServices platformServices;
   String searchPath;
   FileListingBloc(
     FileListingState initialState,
