@@ -30,5 +30,3 @@ For bloc state and event comparisions
 ### video_player
 
 For previewing of videos
-
-## Project structure
