@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../home/model/file_entity.dart';
+import '../../model/file_entity.dart';
 import '../../providers/platform_service_provider.dart';
 import '../../file_view/views/file_display_page.dart';
 import '../bloc/file_listing_bloc.dart';

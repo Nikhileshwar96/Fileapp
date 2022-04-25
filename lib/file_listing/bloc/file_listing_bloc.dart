@@ -1,8 +1,4 @@
-import 'dart:async';
-
 import 'package:equatable/equatable.dart';
-import 'package:file_app/home/model/default_content.dart';
-import 'package:file_app/home/model/file_entity.dart';
 import 'package:file_app/providers/platform_service_provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 

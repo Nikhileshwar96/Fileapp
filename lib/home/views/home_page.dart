@@ -117,7 +117,9 @@ class HomePage extends StatelessWidget {
                       crossAxisCount: 2,
                       crossAxisSpacing: 0.0,
                       mainAxisSpacing: 0.0,
-                      childAspectRatio: MediaQuery.of(context).size.width / 250,
+                      childAspectRatio: MediaQuery.of(context).size.width > 0
+                          ? MediaQuery.of(context).size.width / 250
+                          : 1,
                     ),
                   ),
                 ),

@@ -1,4 +1,4 @@
-import 'package:file_app/home/model/file_entity.dart';
+import 'package:file_app/model/file_entity.dart';
 import 'package:flutter/material.dart';
 
 class DeleteConfirmationView extends StatelessWidget {

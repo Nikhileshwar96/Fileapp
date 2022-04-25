@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:file_app/home/model/file_entity.dart';
-import 'package:file_app/home/model/file_type.dart';
+import 'package:file_app/model/file_entity.dart';
+import 'package:file_app/model/file_type.dart';
 import 'package:flutter/services.dart';
 
 class PlatformServices {
