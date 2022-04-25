@@ -39,7 +39,7 @@ class MainActivity: FlutterActivity() {
     MediaStore.Video.Media.SIZE,
         MediaStore.Video.Media.DATE_TAKEN,
         MediaStore.Video.Media.MIME_TYPE,
-        MediaStore.Video.Media.RELATIVE_PATH,
+        "_data"
     )
 
     private val downloadProjection = arrayOf(
@@ -49,7 +49,7 @@ class MainActivity: FlutterActivity() {
         MediaStore.Downloads.SIZE,
         if (SDK_INT >= Build.VERSION_CODES.Q) MediaStore.Downloads.DURATION else "",
         MediaStore.Downloads.MIME_TYPE,
-        MediaStore.Downloads.RELATIVE_PATH,
+        "_data"
         )
 
     private val imageProjection = arrayOf(
@@ -59,7 +59,7 @@ class MainActivity: FlutterActivity() {
         MediaStore.Images.Media.SIZE,
         MediaStore.Images.Media.DATE_TAKEN,
         MediaStore.Images.Media.MIME_TYPE,
-        MediaStore.Images.Media.RELATIVE_PATH,
+        "_data"
         )
 
     private val audioProjection: Array<String> = arrayOf(
@@ -69,7 +69,7 @@ class MainActivity: FlutterActivity() {
         MediaStore.Audio.Media.SIZE,
         "",
         MediaStore.Audio.Media.MIME_TYPE,
-        MediaStore.Audio.Media.RELATIVE_PATH
+        "_data"
     )
 
     private val fileProjections = arrayOf(
@@ -79,7 +79,7 @@ class MainActivity: FlutterActivity() {
         MediaStore.Files.FileColumns.SIZE,
         if (SDK_INT >= Build.VERSION_CODES.Q) MediaStore.Files.FileColumns.DATE_TAKEN else "",
         MediaStore.Files.FileColumns.MIME_TYPE,
-                MediaStore.Files.FileColumns.RELATIVE_PATH
+                "_data"
     )
 
   override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {

@@ -14,19 +14,24 @@ class FileApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<HomeBloc>(
-      create: (homeBlocProviderContext) => HomeBloc(
-        HomeState(
-          contentTypes: DefaultContent.values.toList(),
+    return RepositoryProvider<PlatformServices>(
+      create: (providerContext) => PlatformServices(),
+      child: Builder(
+        builder: (providerInjectContext) => BlocProvider<HomeBloc>(
+          create: (homeBlocProviderContext) => HomeBloc(
+            HomeState(
+              contentTypes: DefaultContent.values.toList(),
+            ),
+            RepositoryProvider.of<PlatformServices>(providerInjectContext),
+          )..add(CheckPermission()),
+          child: MaterialApp(
+            title: 'File App',
+            theme: ThemeData(
+              primarySwatch: Colors.blue,
+            ),
+            home: const HomePage(),
+          ),
         ),
-        PlatformServices(),
-      )..add(CheckPermission()),
-      child: MaterialApp(
-        title: 'File App',
-        theme: ThemeData(
-          primarySwatch: Colors.blue,
-        ),
-        home: const HomePage(),
       ),
     );
   }

@@ -4,6 +4,7 @@ import 'package:file_app/home/model/file_entity.dart';
 import 'package:file_app/home/model/file_type.dart';
 import 'package:file_app/providers/platform_Service_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:video_player/video_player.dart';
 
 import '../../file_listing/views/delete_confirmation_view.dart';
@@ -43,7 +44,7 @@ class _FileDisplayPageState extends State<FileDisplayPage> {
           ),
           IconButton(
             onPressed: () {
-              PlatformServices().shareFile(
+              RepositoryProvider.of<PlatformServices>(context).shareFile(
                 widget.file.uri,
               );
             },
@@ -55,9 +56,11 @@ class _FileDisplayPageState extends State<FileDisplayPage> {
       ),
       body: SafeArea(
         child: widget.file.type == FileType.image
-            ? Image.file(
-                File(
-                  widget.file.uri,
+            ? Center(
+                child: Image.file(
+                  File(
+                    widget.file.path,
+                  ),
                 ),
               )
             : widget.file.type == FileType.video

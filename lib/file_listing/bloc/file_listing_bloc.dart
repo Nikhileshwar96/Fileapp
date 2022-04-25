@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:file_app/home/model/default_content.dart';
 import 'package:file_app/home/model/file_entity.dart';
-import 'package:file_app/providers/platform_Service_provider.dart';
+import 'package:file_app/providers/platform_service_provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 part 'file_listing_event.dart';
@@ -16,23 +16,42 @@ class FileListingBloc extends Bloc<FileListingEvent, FileListingState> {
   }
 
   loadFiles(LoadFilesInFolder event, Emitter<FileListingState> emit) async {
-    var files = await platformServices.getFolderFiles(event.folderPath);
+    emit(
+      FileListingState(
+        groupName: state.groupName,
+        files: const [],
+        status: FileListingStatus.loading,
+      ),
+    );
+    var files = await platformServices.getFolderFiles(
+      event.folderPath.toLowerCase() == 'internal storage'
+          ? ''
+          : event.folderPath,
+    );
     emit(
       FileListingState(
         groupName: state.groupName,
         files: files,
+        status: FileListingStatus.loaded,
       ),
     );
   }
 
   loadCategoryFiles(
       LoadCategoryFiles event, Emitter<FileListingState> emit) async {
-    var files = await platformServices.getFolderFiles(event.content.name);
     emit(
       FileListingState(
         groupName: state.groupName,
-        files: files,
+        files: const [],
+        status: FileListingStatus.loading,
       ),
+    );
+    var files = await platformServices.getFiles(event.content.name);
+    emit(
+      FileListingState(
+          groupName: state.groupName,
+          files: files,
+          status: FileListingStatus.loaded),
     );
   }
 }

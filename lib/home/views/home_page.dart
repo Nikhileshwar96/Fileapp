@@ -1,4 +1,5 @@
 import 'package:file_app/constants.dart';
+import 'package:file_app/file_listing/bloc/file_listing_bloc.dart';
 import 'package:file_app/home/bloc/home_bloc.dart';
 import 'package:file_app/home/views/category_tiles.dart';
 import 'package:flutter/material.dart';
@@ -54,12 +55,25 @@ class HomePage extends StatelessWidget {
                       onTap: state.permissionStatus ==
                               PermissionStatus.permissionGranted
                           ? () {
-                              var files = PlatformServices().getFolderFiles("");
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (filePageCOntext) => FileDisplay(
-                                    fileName: externalDirectoryName,
-                                    filesFuture: files,
+                                  builder: (filePageCOntext) =>
+                                      BlocProvider<FileListingBloc>(
+                                    create: (blocCreatorContext) =>
+                                        FileListingBloc(
+                                      const FileListingState(
+                                        groupName: externalDirectoryName,
+                                        files: [],
+                                        status: FileListingStatus.loading,
+                                      ),
+                                      RepositoryProvider.of<PlatformServices>(
+                                          context),
+                                    )..add(
+                                            LoadFilesInFolder(
+                                              externalDirectoryName,
+                                            ),
+                                          ),
+                                    child: const FileDisplay(),
                                   ),
                                 ),
                               );

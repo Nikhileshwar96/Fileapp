@@ -1,5 +1,7 @@
+import 'package:file_app/file_listing/bloc/file_listing_bloc.dart';
 import 'package:file_app/home/model/file_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../providers/platform_service_provider.dart';
 import 'file_list.dart';
@@ -35,12 +37,18 @@ class FolderListView extends StatelessWidget {
         ),
       ),
       onTap: () {
-        var fileEntity = PlatformServices().getFolderFiles(file.path);
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (filePageCOntext) => FileDisplay(
-              fileName: file.name,
-              filesFuture: fileEntity,
+            builder: (filePageContext) => BlocProvider(
+              create: (blocCreatorContext) => FileListingBloc(
+                FileListingState(
+                  groupName: file.name,
+                  files: const [],
+                  status: FileListingStatus.loading,
+                ),
+                RepositoryProvider.of<PlatformServices>(context),
+              )..add(LoadFilesInFolder(file.path)),
+              child: const FileDisplay(),
             ),
           ),
         );

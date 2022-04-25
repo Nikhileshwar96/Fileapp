@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:file_app/home/model/file_entity.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../providers/platform_service_provider.dart';
 import '../../file_view/views/file_display_page.dart';
@@ -19,7 +20,7 @@ class VideoListView extends StatelessWidget {
           child: Row(
             children: [
               FutureBuilder<Uint8List>(
-                future: PlatformServices()
+                future: RepositoryProvider.of<PlatformServices>(context)
                     .getThumbnail(file.type.name, file.uri, file.id),
                 builder: (imageContext, imageSnapshot) {
                   return imageSnapshot.hasData

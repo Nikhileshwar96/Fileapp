@@ -1,1 +1,1 @@
-const String externalDirectoryName = 'Internal storage';
+const String externalDirectoryName = 'Internal Storage';

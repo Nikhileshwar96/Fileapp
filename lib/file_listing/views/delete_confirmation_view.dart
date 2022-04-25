@@ -1,6 +1,7 @@
 import 'package:file_app/home/model/file_entity.dart';
 import 'package:file_app/providers/platform_service_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class DeleteConfirmationView extends StatelessWidget {
   final FileEntity file;
@@ -22,7 +23,8 @@ class DeleteConfirmationView extends StatelessWidget {
             children: [
               TextButton(
                 onPressed: () {
-                  PlatformServices().deleteFile(file.uri);
+                  RepositoryProvider.of<PlatformServices>(context)
+                      .deleteFile(file.uri);
                   ScaffoldMessenger.maybeOf(context)?.showSnackBar(
                     const SnackBar(
                       content: Text('Deleted successfully'),

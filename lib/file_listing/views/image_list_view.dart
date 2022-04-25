@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../home/model/file_entity.dart';
 import '../../providers/platform_service_provider.dart';
@@ -20,7 +21,7 @@ class ImageListView extends StatelessWidget {
           child: Row(
             children: [
               FutureBuilder<Uint8List>(
-                future: PlatformServices()
+                future: RepositoryProvider.of<PlatformServices>(context)
                     .getThumbnail(file.type.name, file.uri, file.id),
                 builder: (imageContext, imageSnapshot) {
                   return imageSnapshot.hasData

@@ -1,3 +1,4 @@
+import 'package:file_app/file_listing/bloc/file_listing_bloc.dart';
 import 'package:file_app/home/model/default_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,12 +40,18 @@ class CategoryTiles extends StatelessWidget {
       onTap: BlocProvider.of<HomeBloc>(context).state.permissionStatus ==
               PermissionStatus.permissionGranted
           ? () async {
-              var fileEntity = PlatformServices().getFiles(category.name);
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (filePageCOntext) => FileDisplay(
-                    fileName: category.name,
-                    filesFuture: fileEntity,
+                  builder: (filePageCOntext) => BlocProvider<FileListingBloc>(
+                    create: (blocCreatorContext) => FileListingBloc(
+                      FileListingState(
+                        groupName: category.name,
+                        files: const [],
+                        status: FileListingStatus.loading,
+                      ),
+                      RepositoryProvider.of<PlatformServices>(context),
+                    )..add(LoadCategoryFiles(category)),
+                    child: const FileDisplay(),
                   ),
                 ),
               );

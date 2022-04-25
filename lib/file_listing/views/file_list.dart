@@ -1,21 +1,17 @@
-import 'dart:async';
-
+import 'package:file_app/file_listing/bloc/file_listing_bloc.dart';
 import 'package:file_app/file_listing/views/folder_list_view.dart';
 import 'package:file_app/file_listing/views/image_list_view.dart';
 import 'package:file_app/file_listing/views/video_list_view.dart';
 import 'package:file_app/home/model/file_entity.dart';
 import 'package:file_app/home/model/file_type.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'audio_list_view.dart';
 import 'file_list_view.dart';
 
 class FileDisplay extends StatefulWidget {
-  final String fileName;
-  final Future<List<FileEntity>> filesFuture;
   const FileDisplay({
-    required this.fileName,
-    required this.filesFuture,
     Key? key,
   }) : super(key: key);
 
@@ -33,33 +29,41 @@ class _FileDisplayState extends State<FileDisplay> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.fileName),
+        title: BlocBuilder<FileListingBloc, FileListingState>(
+          builder: (cont, fileListingState) => Text(fileListingState.groupName),
+        ),
       ),
-      body: FutureBuilder<List<FileEntity>>(
-        future: widget.filesFuture,
-        builder: (cont, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(
-              child: Text(
-                'No file present or couldn\'t read folder',
-              ),
-            );
+      body: BlocBuilder<FileListingBloc, FileListingState>(
+        builder: (cont, fileListingState) {
+          switch (fileListingState.status) {
+            case FileListingStatus.loading:
+              return const Center(
+                child: Text(
+                  'No files to display',
+                ),
+              );
+            case FileListingStatus.loaded:
+              var files = fileListingState.files;
+              return files.isNotEmpty
+                  ? ListView.builder(
+                      itemCount: files.length,
+                      itemBuilder: (_fileContext, _fileIndex) {
+                        var file = files[_fileIndex];
+                        return getFileView(file);
+                      },
+                    )
+                  : const Center(
+                      child: Text(
+                        'No files to display',
+                      ),
+                    );
+            case FileListingStatus.error:
+              return const Center(
+                child: Text(
+                  'No file present or couldn\'t read folder',
+                ),
+              );
           }
-
-          var files = snapshot.data!;
-          return files.isNotEmpty
-              ? ListView.builder(
-                  itemCount: files.length,
-                  itemBuilder: (_fileContext, _fileIndex) {
-                    var file = files[_fileIndex];
-                    return getFileView(file);
-                  },
-                )
-              : const Center(
-                  child: Text(
-                    'No files to display',
-                  ),
-                );
         },
       ),
     );
