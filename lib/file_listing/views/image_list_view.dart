@@ -5,13 +5,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../model/file_entity.dart';
 import '../../providers/platform_service_provider.dart';
-import '../../file_view/views/file_display_page.dart';
-import '../bloc/file_listing_bloc.dart';
 
 class ImageListView extends StatelessWidget {
+  final Function onClick;
   final FileEntity file;
 
-  const ImageListView(this.file, {Key? key}) : super(key: key);
+  const ImageListView(
+    this.file,
+    this.onClick, {
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -52,14 +55,7 @@ class ImageListView extends StatelessWidget {
         ),
       ),
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (imageContext) => BlocProvider<FileListingBloc>.value(
-              value: BlocProvider.of<FileListingBloc>(context),
-              child: FileDisplayPage(file),
-            ),
-          ),
-        );
+        onClick();
       },
     );
   }

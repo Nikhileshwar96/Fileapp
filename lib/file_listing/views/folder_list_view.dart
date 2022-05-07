@@ -8,7 +8,11 @@ import 'file_list.dart';
 
 class FolderListView extends StatelessWidget {
   final FileEntity file;
-  const FolderListView(this.file, {Key? key}) : super(key: key);
+
+  const FolderListView(
+    this.file, {
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {

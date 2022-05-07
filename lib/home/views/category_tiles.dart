@@ -2,6 +2,7 @@ import 'package:file_app/file_listing/bloc/file_listing_bloc.dart';
 import 'package:file_app/model/default_content.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../../file_listing/views/file_list.dart';
 import '../../providers/platform_service_provider.dart';
@@ -33,7 +34,7 @@ class CategoryTiles extends StatelessWidget {
             const SizedBox(
               height: 15,
             ),
-            Text(category.name)
+            Text(getCategoryName(category, context) ?? category.name)
           ],
         ),
       ),
@@ -45,8 +46,7 @@ class CategoryTiles extends StatelessWidget {
                   builder: (filePageCOntext) => BlocProvider<FileListingBloc>(
                     create: (blocCreatorContext) => FileListingBloc(
                       FileListingState(
-                        groupName:
-                            getCategoryName(category, context) ?? category.name,
+                        groupName: category.name,
                         files: const [],
                         status: FileListingStatus.loading,
                         folderType: FolderType.categories,

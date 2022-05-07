@@ -6,6 +6,7 @@ import 'package:file_app/model/default_content.dart';
 import 'package:file_app/model/file_entity.dart';
 import 'package:file_app/providers/platform_service_provider.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rxdart/rxdart.dart';
 
 part 'file_listing_event.dart';
 part 'file_listing_state.dart';
@@ -21,7 +22,14 @@ class FileListingBloc extends Bloc<FileListingEvent, FileListingState> {
     on<LoadFilesInFolder>(loadFiles);
     on<LoadCategoryFiles>(loadCategoryFiles);
     on<DeleteFile>(deleteFile);
-    on<LoadMoreFiles>(loadMoreFiles);
+    on<LoadMoreFiles>(
+      loadMoreFiles,
+      transformer: (events, mapper) => events
+          .debounceTime(
+            const Duration(milliseconds: 100),
+          )
+          .switchMap(mapper),
+    );
   }
 
   loadFiles(LoadFilesInFolder event, Emitter<FileListingState> emit) async {

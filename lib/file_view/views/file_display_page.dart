@@ -1,14 +1,9 @@
 import 'dart:io';
 
-import 'package:file_app/file_listing/bloc/file_listing_bloc.dart';
 import 'package:file_app/model/file_entity.dart';
 import 'package:file_app/model/file_type.dart';
-import 'package:file_app/providers/platform_service_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:video_player/video_player.dart';
-
-import 'delete_confirmation_view.dart';
 
 class FileDisplayPage extends StatefulWidget {
   final FileEntity file;
@@ -36,74 +31,28 @@ class _FileDisplayPageState extends State<FileDisplayPage> {
   @override
   Widget build(BuildContext context) {
     videoController?.play();
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          widget.file.name,
-        ),
-        actions: [
-          Builder(
-            builder: (_tempContext) => IconButton(
-              onPressed: () async {
-                bool isDeleteConfirmed = await showModalBottomSheet<bool>(
-                      context: _tempContext,
-                      clipBehavior: Clip.hardEdge,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20.0),
-                      ),
-                      builder: (deleteContext) => DeleteConfirmationView(
-                        widget.file,
-                      ),
-                    ) ??
-                    false;
-                if (isDeleteConfirmed) {
-                  Navigator.pop(context);
-                  BlocProvider.of<FileListingBloc>(context)
-                      .add(DeleteFile(widget.file.path));
-                }
-              },
-              icon: const Icon(
-                Icons.delete,
+    return widget.file.type == FileType.image
+        ? Center(
+            child: Image.file(
+              File(
+                widget.file.path,
               ),
             ),
-          ),
-          IconButton(
-            onPressed: () {
-              RepositoryProvider.of<IPlatformServices>(context).shareFile(
-                widget.file.uri,
-              );
-            },
-            icon: const Icon(
-              Icons.share,
-            ),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: widget.file.type == FileType.image
+          )
+        : widget.file.type == FileType.video
             ? Center(
-                child: Image.file(
-                  File(
-                    widget.file.path,
+                child: AspectRatio(
+                  aspectRatio: videoController?.value.aspectRatio ?? 1,
+                  child: VideoPlayer(
+                    videoController!,
                   ),
                 ),
               )
-            : widget.file.type == FileType.video
-                ? Center(
-                    child: AspectRatio(
-                      aspectRatio: videoController?.value.aspectRatio ?? 1,
-                      child: VideoPlayer(
-                        videoController!,
-                      ),
-                    ),
-                  )
-                : const Center(
-                    child: Text(
-                      'File cannot be previewed',
-                    ),
-                  ),
-      ),
-    );
+            : const Center(
+                child: Text(
+                  'File cannot be previewed',
+                ),
+              );
   }
 
   @override

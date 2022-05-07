@@ -1,4 +1,5 @@
 import 'package:file_app/file_listing/bloc/file_listing_bloc.dart';
+import 'package:file_app/file_listing/views/file_gallery_display.dart';
 import 'package:file_app/file_listing/views/folder_list_view.dart';
 import 'package:file_app/file_listing/views/image_list_view.dart';
 import 'package:file_app/file_listing/views/video_list_view.dart';
@@ -85,9 +86,26 @@ class _FileDisplayState extends State<FileDisplay> {
                       itemBuilder: (_fileContext, _fileIndex) {
                         var file = files[_fileIndex];
                         if (_fileIndex < fileListingState.files.length) {
-                          return getFileView(file);
+                          return getFileView(file, () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (imageContext) =>
+                                    BlocProvider<FileListingBloc>.value(
+                                  value:
+                                      BlocProvider.of<FileListingBloc>(context),
+                                  child: FileGalleryPage(
+                                    files,
+                                    _fileIndex,
+                                  ),
+                                ),
+                              ),
+                            );
+                          });
                         } else {
-                          return const CircularProgressIndicator();
+                          return Container(
+                            color: Colors.red,
+                            child: const Text('....'),
+                          );
                         }
                       },
                       controller: listController,
@@ -110,25 +128,26 @@ class _FileDisplayState extends State<FileDisplay> {
     );
   }
 
-  Widget getFileView(FileEntity file) {
+  Widget getFileView(FileEntity file, Function onClick) {
     switch (file.type) {
       case FileType.image:
-        return ImageListView(file);
+        return ImageListView(file, onClick);
       case FileType.audio:
-        return AudioListView(file);
+        return AudioListView(file, onClick);
       case FileType.directory:
         return FolderListView(file);
       case FileType.file:
-        return FileListView(file);
+        return FileListView(file, onClick);
       case FileType.video:
-        return VideoListView(file);
+        return VideoListView(file, onClick);
     }
 
-    return FileListView(file);
+    return FileListView(file, onClick);
   }
 
   void handleListScroll() {
-    if (listController?.position.outOfRange ?? false) {
+    if ((listController?.position.outOfRange ?? false) &&
+        listController!.offset > 0) {
       fileListBLoc?.add(LoadMoreFiles(currentFilesCount));
     }
   }

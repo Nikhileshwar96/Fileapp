@@ -1,16 +1,19 @@
 import 'dart:typed_data';
 
-import 'package:file_app/file_listing/bloc/file_listing_bloc.dart';
 import 'package:file_app/model/file_entity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../providers/platform_service_provider.dart';
-import '../../file_view/views/file_display_page.dart';
 
 class VideoListView extends StatelessWidget {
   final FileEntity file;
-  const VideoListView(this.file, {Key? key}) : super(key: key);
+  final Function onClick;
+  const VideoListView(
+    this.file,
+    this.onClick, {
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -51,14 +54,7 @@ class VideoListView extends StatelessWidget {
         ),
       ),
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (imageContext) => BlocProvider<FileListingBloc>.value(
-              value: BlocProvider.of<FileListingBloc>(context),
-              child: FileDisplayPage(file),
-            ),
-          ),
-        );
+        onClick();
       },
     );
   }
