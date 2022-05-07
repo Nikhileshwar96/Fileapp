@@ -9,9 +9,16 @@ class PlatformServicesProvider extends IPlatformServices {
   static const platform = MethodChannel('samples.flutter.dev/battery');
 
   @override
-  Future<List<FileEntity>> getFiles(String fileType) async {
-    final List fileObjects =
-        await platform.invokeMethod('getFiles', {'type': fileType});
+  Future<List<FileEntity>> getFiles(
+    String fileType,
+    int skipCount,
+    int takeCount,
+  ) async {
+    final List fileObjects = await platform.invokeMethod('getFiles', {
+      'type': fileType,
+      'skip': skipCount,
+      'take': takeCount,
+    });
 
     final List<FileEntity> fileEntityList = <FileEntity>[];
     for (var file in fileObjects) {
@@ -59,9 +66,13 @@ class PlatformServicesProvider extends IPlatformServices {
   @override
   Future<List<FileEntity>> getFolderFiles(
     String folder,
+    int skipCount,
+    int takeCount,
   ) async {
     final List fileObjects = await platform.invokeMethod('getFolderFile', {
       'folder': folder,
+      'skip': skipCount,
+      'take': takeCount,
     });
 
     final List<FileEntity> fileEntityList = <FileEntity>[];

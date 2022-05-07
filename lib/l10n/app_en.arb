@@ -1,0 +1,30 @@
+{
+    "internalStorage": "Internal storage",
+    "@internalStorage": {
+      "description": "Internal storage label"
+    },
+    "video": "Video",
+    "@video": {
+      "description": "video label"
+    },
+    "image": "Image",
+    "@image": {
+      "description": "Image label"
+    },
+    "download": "Download",
+    "@download": {
+      "download": "Download label"
+    },
+    "categories": "Categories",
+    "@categories": {
+      "categories": "categories"
+    },
+    "myFiles": "My Files",
+    "@myFiles" : {
+        "myFiles": "My files"
+    },
+    "audio": "Audio",
+    "@audio" : {
+        "audio": "audio"
+    }
+}

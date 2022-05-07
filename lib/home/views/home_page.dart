@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../file_listing/views/file_list.dart';
 import '../../providers/platform_service_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -21,7 +22,7 @@ class HomePage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'My Files',
+                AppLocalizations.of(context)?.myFiles ?? 'My Files',
                 style: Theme.of(context).textTheme.headline5,
               ),
               const SizedBox(
@@ -45,7 +46,8 @@ class HomePage extends StatelessWidget {
                                 width: 10,
                               ),
                               Text(
-                                externalDirectoryName,
+                                AppLocalizations.of(context)?.internalStorage ??
+                                    'Internal storage',
                                 style: Theme.of(context).textTheme.bodyMedium,
                               ),
                             ],

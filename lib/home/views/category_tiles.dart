@@ -45,7 +45,8 @@ class CategoryTiles extends StatelessWidget {
                   builder: (filePageCOntext) => BlocProvider<FileListingBloc>(
                     create: (blocCreatorContext) => FileListingBloc(
                       FileListingState(
-                        groupName: category.name,
+                        groupName:
+                            getCategoryName(category, context) ?? category.name,
                         files: const [],
                         status: FileListingStatus.loading,
                         folderType: FolderType.categories,
@@ -65,5 +66,23 @@ class CategoryTiles extends StatelessWidget {
                 ),
               ),
     );
+  }
+
+  String? getCategoryName(
+    DefaultContent content,
+    BuildContext context,
+  ) {
+    switch (content) {
+      case DefaultContent.video:
+        return AppLocalizations.of(context)?.video;
+      case DefaultContent.image:
+        return AppLocalizations.of(context)?.image;
+      case DefaultContent.download:
+        return AppLocalizations.of(context)?.download;
+      case DefaultContent.audio:
+        return AppLocalizations.of(context)?.audio;
+    }
+
+    return null;
   }
 }

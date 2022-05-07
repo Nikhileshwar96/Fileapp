@@ -5,6 +5,8 @@ import 'package:file_app/providers/platform_service_implementation.dart';
 import 'package:file_app/providers/platform_service_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
   runApp(const FileApp());
@@ -30,6 +32,16 @@ class FileApp extends StatelessWidget {
             theme: ThemeData(
               primarySwatch: Colors.blue,
             ),
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en', ''),
+              Locale('hi', ''),
+              Locale('ta', '')
+            ],
             home: const HomePage(),
           ),
         ),

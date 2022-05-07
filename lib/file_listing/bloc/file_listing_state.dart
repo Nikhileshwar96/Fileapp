@@ -1,6 +1,6 @@
 part of 'file_listing_bloc.dart';
 
-enum FileListingStatus { loading, loaded, error }
+enum FileListingStatus { loading, loaded, error, loadingMore }
 
 class FileListingState extends Equatable {
   final String groupName;

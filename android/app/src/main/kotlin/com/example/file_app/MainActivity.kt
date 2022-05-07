@@ -25,6 +25,7 @@ import android.webkit.MimeTypeMap
 
 import android.content.ContentResolver
 import androidx.core.content.FileProvider
+import java.io.FileFilter
 import java.util.*
 
 class MainActivity: FlutterActivity() {
@@ -101,8 +102,10 @@ class MainActivity: FlutterActivity() {
           }
 
           val type = call.argument<String>("type")
+          val skipCount: Int = if(call.argument<Int>("skip") != null) call.argument<Int>("skip")!! else 0
+          val takeCount: Int = if(call.argument<Int>("take") != null) call.argument<Int>("take")!! else 20
           if(type != null){
-              runSearch(result, getProjections(type), getExternalContentUri(type), successCB, failureCB)
+              runSearch(result, getProjections(type), getExternalContentUri(type), successCB, failureCB, skipCount, takeCount)
           }
           else{
               result.error("type unsupported", "type invalid", "File type has to be given")
@@ -138,12 +141,15 @@ class MainActivity: FlutterActivity() {
         }
         if(call.method == "getFolderFile"){
             var folder = call.argument<String>("folder")
+            val skipCount: Int = if(call.argument<Int>("skip") != null) call.argument<Int>("skip")!! else 0
+            val takeCount: Int = if(call.argument<Int>("take") != null) call.argument<Int>("take")!! else 20
+
             if(folder != null) {
                 if (folder.isEmpty()) {
                     folder = "/storage/emulated/0"
                 }
                 
-                getFolderFile(result, folder)
+                getFolderFile(result, folder, skipCount, takeCount)
             }
             else{
                 result.error("Invaild folder", "Folder is empty", "Empty folder")
@@ -223,7 +229,7 @@ class MainActivity: FlutterActivity() {
         }
     }
 
-    private fun runSearch(result: MethodChannel.Result, projection: Array<String>, externalUri:Uri, successCallback: (filesData: MutableList<Map<String, String>>) -> Unit, failureCallback: (reason: String)->Unit) {
+    private fun runSearch(result: MethodChannel.Result, projection: Array<String>, externalUri:Uri, successCallback: (filesData: MutableList<Map<String, String>>) -> Unit, failureCallback: (reason: String)->Unit, skipCount: Int, takeCount: Int) {
         try {
             val fileData: MutableList<Map<String, String>> = mutableListOf()
 
@@ -258,7 +264,11 @@ class MainActivity: FlutterActivity() {
                 val mimeTypeColumn = cursor.getColumnIndex(projection[5])
                 val pathColumn = cursor.getColumnIndex(projection[6])
 
-                while (cursor.moveToNext()) {
+                cursor.moveToPosition(skipCount)
+                var i: Int = 0;
+                while(i < takeCount) {
+                    cursor.moveToNext();
+                    i++;
                     val id = cursor.getLong(idColumn)
                     val name = cursor.getString(nameColumn)
                     val duration = if(durationColumn == null) null else cursor.getInt(durationColumn)
@@ -349,11 +359,18 @@ class MainActivity: FlutterActivity() {
         return MediaStore.Files.getContentUri(Environment.DIRECTORY_DOWNLOADS)
     }
 
-    private fun getFolderFile(result: MethodChannel.Result, folderName: String) {
+    private fun getFolderFile(result: MethodChannel.Result, folderName: String, skipCount: Int, takeCount: Int) {
         val fileData: MutableList<Map<String, String>> = mutableListOf()
         val file = File(folderName)
-        file.listFiles()?.forEach { childFile ->
+        val files = file.listFiles();
+        var fileIndex = 0;
+
+        while(fileIndex < takeCount && (fileIndex + skipCount) < files.size){
+            val childFile = files[fileIndex + skipCount];
+            fileIndex++;
+
             val fileEntity: MutableMap<String, String> = mutableMapOf()
+
             fileEntity["name"] = childFile.name
             fileEntity["uri"] = if (childFile.isDirectory) "dir" else
                 FileProvider.getUriForFile(

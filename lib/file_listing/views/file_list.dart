@@ -20,9 +20,21 @@ class FileDisplay extends StatefulWidget {
 }
 
 class _FileDisplayState extends State<FileDisplay> {
+  ScrollController? listController;
+  FileListingBloc? fileListBLoc;
+  int currentFilesCount = 0;
+
   @override
   void initState() {
+    listController = ScrollController();
+    listController?.addListener(handleListScroll);
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    listController?.dispose();
+    super.dispose();
   }
 
   @override
@@ -49,6 +61,8 @@ class _FileDisplayState extends State<FileDisplay> {
       ),
       body: BlocBuilder<FileListingBloc, FileListingState>(
         builder: (cont, fileListingState) {
+          fileListBLoc ??= BlocProvider.of<FileListingBloc>(context);
+
           switch (fileListingState.status) {
             case FileListingStatus.loading:
               return const Center(
@@ -58,14 +72,25 @@ class _FileDisplayState extends State<FileDisplay> {
                 ),
               );
             case FileListingStatus.loaded:
+            case FileListingStatus.loadingMore:
+              currentFilesCount = fileListingState.files.length +
+                  (fileListingState.status == FileListingStatus.loadingMore
+                      ? 1
+                      : 0);
               var files = fileListingState.files;
               return files.isNotEmpty
                   ? ListView.builder(
                       itemCount: files.length,
+                      physics: const BouncingScrollPhysics(),
                       itemBuilder: (_fileContext, _fileIndex) {
                         var file = files[_fileIndex];
-                        return getFileView(file);
+                        if (_fileIndex < fileListingState.files.length) {
+                          return getFileView(file);
+                        } else {
+                          return const CircularProgressIndicator();
+                        }
                       },
+                      controller: listController,
                     )
                   : const Center(
                       child: Text(
@@ -100,5 +125,11 @@ class _FileDisplayState extends State<FileDisplay> {
     }
 
     return FileListView(file);
+  }
+
+  void handleListScroll() {
+    if (listController?.position.outOfRange ?? false) {
+      fileListBLoc?.add(LoadMoreFiles(currentFilesCount));
+    }
   }
 }

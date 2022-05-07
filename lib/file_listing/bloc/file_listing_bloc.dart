@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
+import 'package:file_app/constants.dart';
 import 'package:file_app/model/default_content.dart';
 import 'package:file_app/model/file_entity.dart';
 import 'package:file_app/providers/platform_service_provider.dart';
@@ -18,6 +21,7 @@ class FileListingBloc extends Bloc<FileListingEvent, FileListingState> {
     on<LoadFilesInFolder>(loadFiles);
     on<LoadCategoryFiles>(loadCategoryFiles);
     on<DeleteFile>(deleteFile);
+    on<LoadMoreFiles>(loadMoreFiles);
   }
 
   loadFiles(LoadFilesInFolder event, Emitter<FileListingState> emit) async {
@@ -33,6 +37,8 @@ class FileListingBloc extends Bloc<FileListingEvent, FileListingState> {
       event.folderPath.toLowerCase() == 'internal storage'
           ? ''
           : event.folderPath,
+      0,
+      queryTakeCount,
     );
     emit(
       FileListingState(
@@ -54,7 +60,12 @@ class FileListingBloc extends Bloc<FileListingEvent, FileListingState> {
         folderType: state.folderType,
       ),
     );
-    var files = await platformServices.getFiles(event.content.name);
+
+    var files = await platformServices.getFiles(
+      event.content.name,
+      0,
+      queryTakeCount,
+    );
     emit(
       FileListingState(
         groupName: state.groupName,
@@ -78,9 +89,15 @@ class FileListingBloc extends Bloc<FileListingEvent, FileListingState> {
     bool isDeleted = await platformServices.deleteFile(event.filePath);
 
     var files = state.folderType == FolderType.categories
-        ? await platformServices.getFiles(searchPath)
+        ? await platformServices.getFiles(
+            searchPath,
+            0,
+            queryTakeCount,
+          )
         : await platformServices.getFolderFiles(
             searchPath.toLowerCase() == 'internal storage' ? '' : searchPath,
+            0,
+            queryTakeCount,
           );
     emit(
       FileListingState(
@@ -89,6 +106,47 @@ class FileListingBloc extends Bloc<FileListingEvent, FileListingState> {
           status: FileListingStatus.loaded,
           folderType: state.folderType,
           message: isDeleted ? 'Deleted successfully' : 'Deleting failed'),
+    );
+  }
+
+  FutureOr<void> loadMoreFiles(
+      LoadMoreFiles event, Emitter<FileListingState> emit) async {
+    if (state.status == FileListingStatus.loadingMore) {
+      return;
+    }
+
+    var fileCache = state.files;
+
+    emit(
+      FileListingState(
+        groupName: state.groupName,
+        files: state.files,
+        status: FileListingStatus.loadingMore,
+        folderType: state.folderType,
+      ),
+    );
+
+    var files = state.folderType == FolderType.categories
+        ? await platformServices.getFiles(
+            searchPath,
+            event.currentFilesCount,
+            queryTakeCount,
+          )
+        : await platformServices.getFolderFiles(
+            searchPath.toLowerCase() == 'internal storage' ? '' : searchPath,
+            event.currentFilesCount,
+            queryTakeCount,
+          );
+
+    fileCache.addAll(files);
+
+    emit(
+      FileListingState(
+        groupName: state.groupName,
+        files: fileCache,
+        status: FileListingStatus.loaded,
+        folderType: state.folderType,
+      ),
     );
   }
 }

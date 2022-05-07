@@ -6,7 +6,11 @@ import 'package:flutter/services.dart';
 abstract class IPlatformServices {
   static const platform = MethodChannel('samples.flutter.dev/battery');
 
-  Future<List<FileEntity>> getFiles(String fileType);
+  Future<List<FileEntity>> getFiles(
+    String fileType,
+    int skipCount,
+    int takeCount,
+  );
 
   Future<Uint8List> getThumbnail(
     String fileType,
@@ -20,6 +24,8 @@ abstract class IPlatformServices {
 
   Future<List<FileEntity>> getFolderFiles(
     String folder,
+    int skipCount,
+    int takeCount,
   );
 
   shareFile(String path);

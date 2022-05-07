@@ -31,3 +31,11 @@ class DeleteFile extends FileListingEvent {
   @override
   List<Object?> get props => [filePath];
 }
+
+class LoadMoreFiles extends FileListingEvent {
+  final int currentFilesCount;
+  LoadMoreFiles(this.currentFilesCount);
+
+  @override
+  List<Object?> get props => [currentFilesCount];
+}
